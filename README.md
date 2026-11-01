@@ -55,7 +55,7 @@ powershell -ExecutionPolicy Bypass -File .\Test-DnsLeak.ps1
 
 Быстрая проверка через рекомендуемый API без диалогов:
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\Test-DnsLeak.ps1 -Provider bash_ws -NonInteractive
+powershell -ExecutionPolicy Bypass -File .\Test-DnsLeak.ps1 -NonInteractive
 ```
 
 Посмотреть только локальные DNS-настройки роутера и адаптеров:
