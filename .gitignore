@@ -1,0 +1,27 @@
+# Gradle and build files
+.gradle/
+build/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# IDE and editors
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Keep root APK and version.json for GitHub in-app updates
+!DnsLeakTest.apk
+!version.json

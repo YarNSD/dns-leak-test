@@ -1,0 +1,455 @@
+package com.dnsleak.test.service
+
+import android.content.Context
+import com.dnsleak.test.model.DnsLeakResult
+import com.dnsleak.test.model.DnsProvider
+import com.dnsleak.test.model.DnsServerItem
+import com.dnsleak.test.model.LocalDnsInfo
+import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.InetAddress
+import java.net.URL
+import java.util.UUID
+
+class DnsLeakTester(private val context: Context) {
+
+    private val gson = Gson()
+    private val localInspector = LocalDnsInspector(context)
+
+    companion object {
+        private val RU_ISP_KEYWORDS = listOf(
+            "rostelecom", "ростелеком", "rtcomm", "mts", "мтс", "mobile telesystems",
+            "megafon", "мегафон", "netbynet", "vimpelcom", "вымпелком", "beeline", "билайн",
+            "er-telecom", "эр-телеком", "dom.ru", "дом.ru", "transtelecom", "транстелеком", "ttk",
+            "ufanet", "уфанет", "akado", "акадо", "comcor", "tattelecom", "таттелеком",
+            "mgts", "мгтс", "yota", "йота", "skartel", "скартел", "tele2", "теле2"
+        )
+
+        private val SECURE_DNS_KEYWORDS = listOf(
+            "cloudflare", "google", "quad9", "adguard", "mullvad", "opendns", "cisco",
+            "nextdns", "control d", "cleanbrowsing", "dns.sb"
+        )
+    }
+
+    suspend fun runTest(provider: DnsProvider): DnsLeakResult = withContext(Dispatchers.IO) {
+        val startTime = System.currentTimeMillis()
+        val localDns = localInspector.inspect()
+
+        return@withContext try {
+            when (provider.id) {
+                "bash_ws" -> testBashWs(provider, localDns, startTime)
+                "edns_ip_api" -> testEdnsIpApi(provider, localDns, startTime)
+                "ipleak_net" -> testIpLeakNet(provider, localDns, startTime)
+                "mullvad_net" -> testMullvad(provider, localDns, startTime)
+                "whoer_net" -> testWhoer(provider, localDns, startTime)
+                "adguard_dns" -> testAdguard(provider, localDns, startTime)
+                else -> testGenericFallback(provider, localDns, startTime)
+            }
+        } catch (e: Exception) {
+            val duration = System.currentTimeMillis() - startTime
+            DnsLeakResult(
+                clientIp = "Ошибка подключения",
+                clientIsp = e.localizedMessage ?: "Сетевая ошибка",
+                clientCountry = "Не определено",
+                servers = emptyList(),
+                isOverallLeak = false,
+                providerName = provider.name,
+                testDurationMs = duration,
+                localDnsInfo = localDns,
+                rawReport = "Ошибка запроса к ${provider.url}: ${e.message}"
+            )
+        }
+    }
+
+    private fun testBashWs(
+        provider: DnsProvider,
+        localDns: LocalDnsInfo,
+        startTime: Long
+    ): DnsLeakResult {
+        val testId = UUID.randomUUID().toString().replace("-", "").take(10)
+
+        for (i in 1..10) {
+            try {
+                InetAddress.getAllByName("$i.$testId.bash.ws")
+            } catch (_: Exception) { }
+        }
+
+        Thread.sleep(700)
+
+        val jsonUrl = "https://bash.ws/dnsleak/test/$testId?json"
+        val response = httpGet(jsonUrl)
+
+        var clientIp = "Неизвестно"
+        var clientIsp = "Неизвестно"
+        var clientCountry = "Неизвестно"
+        val dnsItems = mutableListOf<DnsServerItem>()
+
+        val jsonArray = gson.fromJson(response, JsonArray::class.java)
+        for (elem in jsonArray) {
+            val obj = elem.asJsonObject
+            val type = obj.get("type")?.asString ?: ""
+            val ip = obj.get("ip")?.asString ?: ""
+            val country = obj.get("country_name")?.asString ?: "Неизвестно"
+            val asn = obj.get("asn")?.asString ?: ""
+            val asOrg = obj.get("as_org")?.asString ?: ""
+            val isp = if (asn.isNotEmpty()) "$asn $asOrg".trim() else asOrg
+
+            if (type == "ip") {
+                clientIp = ip
+                clientIsp = isp
+                clientCountry = country
+            } else if (type == "dns") {
+                val source = determineDnsSource(ip, localDns)
+                val analysis = evaluateDnsServer(isp, country, clientIsp, clientCountry, localDns)
+
+                dnsItems.add(
+                    DnsServerItem(
+                        ip = ip,
+                        isp = isp.ifEmpty { "Неизвестный провайдер" },
+                        country = country,
+                        countryCode = obj.get("country")?.asString ?: "",
+                        sourceAttribution = source,
+                        isIspDns = analysis.isIspDns,
+                        isLeak = analysis.isLeak,
+                        statusText = analysis.statusText
+                    )
+                )
+            }
+        }
+
+        val overallLeak = dnsItems.any { it.isLeak }
+        val duration = System.currentTimeMillis() - startTime
+
+        return DnsLeakResult(
+            clientIp = clientIp,
+            clientIsp = clientIsp,
+            clientCountry = clientCountry,
+            servers = dnsItems,
+            isOverallLeak = overallLeak,
+            providerName = provider.name,
+            testDurationMs = duration,
+            localDnsInfo = localDns,
+            rawReport = response
+        )
+    }
+
+    private fun testEdnsIpApi(
+        provider: DnsProvider,
+        localDns: LocalDnsInfo,
+        startTime: Long
+    ): DnsLeakResult {
+        val response = httpGet("http://edns.ip-api.com/json")
+        val obj = gson.fromJson(response, JsonObject::class.java)
+
+        val clientObj = obj.getAsJsonObject("client")
+        val clientIp = clientObj?.get("ip")?.asString ?: "Неизвестно"
+        val clientIsp = clientObj?.get("isp")?.asString ?: "Неизвестно"
+        val clientCountry = clientObj?.get("country")?.asString ?: "Неизвестно"
+
+        val dnsObj = obj.getAsJsonObject("dns")
+        val dnsItems = mutableListOf<DnsServerItem>()
+
+        if (dnsObj != null) {
+            val ip = dnsObj.get("ip")?.asString ?: ""
+            val isp = dnsObj.get("isp")?.asString ?: dnsObj.get("geo")?.asString ?: ""
+            val country = dnsObj.get("country")?.asString ?: ""
+            val source = determineDnsSource(ip, localDns)
+            val analysis = evaluateDnsServer(isp, country, clientIsp, clientCountry, localDns)
+
+            dnsItems.add(
+                DnsServerItem(
+                    ip = ip,
+                    isp = isp,
+                    country = country,
+                    countryCode = "",
+                    sourceAttribution = source,
+                    isIspDns = analysis.isIspDns,
+                    isLeak = analysis.isLeak,
+                    statusText = analysis.statusText
+                )
+            )
+        }
+
+        val duration = System.currentTimeMillis() - startTime
+        return DnsLeakResult(
+            clientIp = clientIp,
+            clientIsp = clientIsp,
+            clientCountry = clientCountry,
+            servers = dnsItems,
+            isOverallLeak = dnsItems.any { it.isLeak },
+            providerName = provider.name,
+            testDurationMs = duration,
+            localDnsInfo = localDns,
+            rawReport = response
+        )
+    }
+
+    private fun testIpLeakNet(
+        provider: DnsProvider,
+        localDns: LocalDnsInfo,
+        startTime: Long
+    ): DnsLeakResult {
+        val response = httpGet("https://ipleak.net/json/")
+        val obj = gson.fromJson(response, JsonObject::class.java)
+
+        val clientIp = obj.get("ip")?.asString ?: "Неизвестно"
+        val clientIsp = obj.get("isp_name")?.asString ?: "Неизвестно"
+        val clientCountry = obj.get("country_name")?.asString ?: "Неизвестно"
+
+        val dnsItems = mutableListOf<DnsServerItem>()
+        val dnsObj = obj.getAsJsonObject("dns_resolvers")
+        if (dnsObj != null) {
+            for (key in dnsObj.keySet()) {
+                val item = dnsObj.getAsJsonObject(key)
+                val ip = item.get("ip")?.asString ?: key
+                val isp = item.get("isp_name")?.asString ?: ""
+                val country = item.get("country_name")?.asString ?: ""
+                val source = determineDnsSource(ip, localDns)
+                val analysis = evaluateDnsServer(isp, country, clientIsp, clientCountry, localDns)
+
+                dnsItems.add(
+                    DnsServerItem(
+                        ip = ip,
+                        isp = isp,
+                        country = country,
+                        countryCode = item.get("country_code")?.asString ?: "",
+                        sourceAttribution = source,
+                        isIspDns = analysis.isIspDns,
+                        isLeak = analysis.isLeak,
+                        statusText = analysis.statusText
+                    )
+                )
+            }
+        }
+
+        val duration = System.currentTimeMillis() - startTime
+        return DnsLeakResult(
+            clientIp = clientIp,
+            clientIsp = clientIsp,
+            clientCountry = clientCountry,
+            servers = dnsItems,
+            isOverallLeak = dnsItems.any { it.isLeak },
+            providerName = provider.name,
+            testDurationMs = duration,
+            localDnsInfo = localDns,
+            rawReport = response
+        )
+    }
+
+    private fun testMullvad(
+        provider: DnsProvider,
+        localDns: LocalDnsInfo,
+        startTime: Long
+    ): DnsLeakResult {
+        val response = httpGet("https://am.i.mullvad.net/json")
+        val obj = gson.fromJson(response, JsonObject::class.java)
+
+        val clientIp = obj.get("ip")?.asString ?: "Неизвестно"
+        val clientIsp = obj.get("organization")?.asString ?: "Неизвестно"
+        val clientCountry = obj.get("country")?.asString ?: "Неизвестно"
+
+        val dnsItems = mutableListOf<DnsServerItem>()
+        try {
+            val dnsResponse = httpGet("https://am.i.mullvad.net/dnsleak")
+            val dnsObj = gson.fromJson(dnsResponse, JsonArray::class.java)
+            for (item in dnsObj) {
+                val sObj = item.asJsonObject
+                val ip = sObj.get("ip")?.asString ?: ""
+                val isp = sObj.get("organization")?.asString ?: ""
+                val country = sObj.get("country")?.asString ?: ""
+                val source = determineDnsSource(ip, localDns)
+                val analysis = evaluateDnsServer(isp, country, clientIsp, clientCountry, localDns)
+
+                dnsItems.add(
+                    DnsServerItem(
+                        ip = ip,
+                        isp = isp,
+                        country = country,
+                        countryCode = "",
+                        sourceAttribution = source,
+                        isIspDns = analysis.isIspDns,
+                        isLeak = analysis.isLeak,
+                        statusText = analysis.statusText
+                    )
+                )
+            }
+        } catch (_: Exception) { }
+
+        val duration = System.currentTimeMillis() - startTime
+        return DnsLeakResult(
+            clientIp = clientIp,
+            clientIsp = clientIsp,
+            clientCountry = clientCountry,
+            servers = dnsItems,
+            isOverallLeak = dnsItems.any { it.isLeak },
+            providerName = provider.name,
+            testDurationMs = duration,
+            localDnsInfo = localDns,
+            rawReport = response
+        )
+    }
+
+    private fun testWhoer(
+        provider: DnsProvider,
+        localDns: LocalDnsInfo,
+        startTime: Long
+    ): DnsLeakResult {
+        return testBashWs(provider, localDns, startTime)
+    }
+
+    private fun testAdguard(
+        provider: DnsProvider,
+        localDns: LocalDnsInfo,
+        startTime: Long
+    ): DnsLeakResult {
+        val response = httpGet("https://api-adguard-dns.org/v1/status")
+        val obj = gson.fromJson(response, JsonObject::class.java)
+
+        val clientIp = obj.get("ip")?.asString ?: "Неизвестно"
+        val clientIsp = obj.get("isp")?.asString ?: "AdGuard Diagnostic Node"
+        val clientCountry = obj.get("country")?.asString ?: "Неизвестно"
+
+        val dnsItems = mutableListOf<DnsServerItem>()
+        val isFiltered = obj.get("dns_filter")?.asBoolean ?: false
+        val source = if (!localDns.privateDnsHostname.isNullOrEmpty()) {
+            "Источник: Настройки Android (Частный DNS: ${localDns.privateDnsHostname})"
+        } else {
+            determineDnsSource(clientIp, localDns)
+        }
+
+        val analysis = evaluateDnsServer(clientIsp, clientCountry, clientIsp, clientCountry, localDns)
+
+        dnsItems.add(
+            DnsServerItem(
+                ip = clientIp,
+                isp = if (isFiltered) "AdGuard Protected Resolver" else clientIsp,
+                country = clientCountry,
+                countryCode = "",
+                sourceAttribution = source,
+                isIspDns = analysis.isIspDns,
+                isLeak = analysis.isLeak,
+                statusText = if (isFiltered) "БЕЗОПАСНО: DoH/DoT защита AdGuard" else analysis.statusText
+            )
+        )
+
+        val duration = System.currentTimeMillis() - startTime
+        return DnsLeakResult(
+            clientIp = clientIp,
+            clientIsp = clientIsp,
+            clientCountry = clientCountry,
+            servers = dnsItems,
+            isOverallLeak = dnsItems.any { it.isLeak },
+            providerName = provider.name,
+            testDurationMs = duration,
+            localDnsInfo = localDns,
+            rawReport = response
+        )
+    }
+
+    private fun testGenericFallback(
+        provider: DnsProvider,
+        localDns: LocalDnsInfo,
+        startTime: Long
+    ): DnsLeakResult {
+        return testBashWs(provider, localDns, startTime)
+    }
+
+    private fun determineDnsSource(resolverIp: String, localDns: LocalDnsInfo): String {
+        if (!localDns.privateDnsHostname.isNullOrBlank()) {
+            return "Источник: Настройки Android (Частный DNS: ${localDns.privateDnsHostname})"
+        }
+
+        if (localDns.gatewayIp != null && localDns.dnsServers.contains(localDns.gatewayIp)) {
+            return "Источник: Задан на роутере (${localDns.gatewayIp} / DHCP)"
+        }
+
+        for (localIp in localDns.dnsServers) {
+            if (localIp == resolverIp) {
+                return "Источник: Настроен в параметрах адаптера ($localIp)"
+            }
+            if (localIp.startsWith("192.168.") || localIp.startsWith("10.") || localIp.startsWith("172.16.")) {
+                return "Источник: Задан на локальном шлюзе/роутере ($localIp)"
+            }
+        }
+
+        if (localDns.isVpnActive) {
+            return "Источник: VPN-туннель (${localDns.interfaceName ?: "туннель"})"
+        }
+
+        return "Источник: Внешний транзитный резолвер"
+    }
+
+    private data class DnsEvaluation(
+        val isIspDns: Boolean,
+        val isLeak: Boolean,
+        val statusText: String
+    )
+
+    private fun evaluateDnsServer(
+        dnsIsp: String,
+        dnsCountry: String,
+        clientIsp: String,
+        clientCountry: String,
+        localDns: LocalDnsInfo
+    ): DnsEvaluation {
+        val lowerDnsIsp = dnsIsp.lowercase()
+        val lowerClientIsp = clientIsp.lowercase()
+
+        val isSecureDns = SECURE_DNS_KEYWORDS.any { lowerDnsIsp.contains(it) }
+        val isKnownRuIsp = RU_ISP_KEYWORDS.any { lowerDnsIsp.contains(it) }
+        val matchesClientIsp = lowerClientIsp.isNotEmpty() &&
+                lowerClientIsp != "неизвестно" &&
+                (lowerDnsIsp.contains(lowerClientIsp) || lowerClientIsp.contains(lowerDnsIsp))
+
+        val isIspDns = (isKnownRuIsp || matchesClientIsp) && !isSecureDns
+
+        val isLeak = if (localDns.isVpnActive) {
+            isIspDns || matchesClientIsp || (dnsCountry.equals("Russia", ignoreCase = true) && !clientCountry.equals("Russia", ignoreCase = true))
+        } else {
+            isIspDns
+        }
+
+        val statusText = when {
+            isLeak && localDns.isVpnActive -> "УТЕЧКА: Используется DNS интернет-провайдера ($dnsIsp)"
+            isIspDns -> "ВНИМАНИЕ: Используется DNS интернет-провайдера ($dnsIsp)"
+            isSecureDns -> "БЕЗОПАСНО: DNS провайдера НЕ используется ($dnsIsp)"
+            else -> "БЕЗОПАСНО: Внешний независимый резолвер ($dnsIsp)"
+        }
+
+        return DnsEvaluation(
+            isIspDns = isIspDns,
+            isLeak = isLeak,
+            statusText = statusText
+        )
+    }
+
+    private fun httpGet(urlStr: String): String {
+        val url = URL(urlStr)
+        val conn = url.openConnection() as HttpURLConnection
+        conn.requestMethod = "GET"
+        conn.connectTimeout = 9000
+        conn.readTimeout = 9000
+        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; DNS Leak Test 1.0)")
+        conn.setRequestProperty("Accept", "application/json")
+
+        val responseCode = conn.responseCode
+        if (responseCode !in 200..299) {
+            throw RuntimeException("HTTP $responseCode от $urlStr")
+        }
+
+        val reader = BufferedReader(InputStreamReader(conn.inputStream))
+        val sb = StringBuilder()
+        var line: String?
+        while (reader.readLine().also { line = it } != null) {
+            sb.append(line)
+        }
+        reader.close()
+        return sb.toString()
+    }
+}

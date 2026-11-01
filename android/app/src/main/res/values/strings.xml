@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">DNS Leak Test</string>
+    <string name="btn_check">Проверка</string>
+    <string name="btn_select_api">Выбрать API проверки</string>
+    <string name="btn_details">Подробнее</string>
+    <string name="btn_copy">Скопировать отчет</string>
+    <string name="btn_close">Закрыть</string>
+    <string name="label_current_api">Активный API:</string>
+    <string name="label_client_ip">Внешний IP:</string>
+    <string name="label_local_dns">Локальный DNS:</string>
+    <string name="status_ready">Готов к проверке</string>
+    <string name="status_testing">Выполняется проверка DNS...</string>
+    <string name="status_safe">Безопасно. Утечки не обнаружено</string>
+    <string name="status_leak">Внимание. Обнаружена утечка DNS</string>
+    <string name="status_unknown">Статус не определен</string>
+    <string name="no_servers_found">Серверы DNS не обнаружены</string>
+    <string name="copied_to_clipboard">Отчет скопирован в буфер обмена</string>
+</resources>

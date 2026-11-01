@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardApi"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="@color/surface"
+    app:cardCornerRadius="10dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/divider"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <!-- Header: Name & Status Badges -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvApiName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/on_surface"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:text="bash.ws" />
+
+            <TextView
+                android:id="@+id/tvApiStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/badge_neutral_bg"
+                android:paddingHorizontal="7dp"
+                android:paddingVertical="3dp"
+                android:text="НЕ ПРОВЕРЕН"
+                android:textColor="@color/on_surface_variant"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:text="ДОСТУПЕН (114 ms)"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/tvApiBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/badge_safe_bg"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
+                android:text="АКТИВЕН"
+                android:textColor="@color/status_safe_text"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- URL -->
+        <TextView
+            android:id="@+id/tvApiUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="monospace"
+            android:textColor="@color/primary"
+            android:textSize="12sp"
+            tools:text="https://bash.ws/dnsleak" />
+
+        <!-- Description -->
+        <TextView
+            android:id="@+id/tvApiDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/on_surface"
+            android:textSize="13sp"
+            tools:text="Генерация случайных probe-доменов для точного отслеживания" />
+
+        <!-- Method Details -->
+        <TextView
+            android:id="@+id/tvApiMethod"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/on_surface_variant"
+            android:textSize="12sp"
+            tools:text="Метод: Отправляет 10 случайных DNS-запросов..." />
+
+        <!-- RU Availability -->
+        <TextView
+            android:id="@+id/tvApiRuAvailability"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/status_info_text"
+            android:textSize="12sp"
+            tools:text="Доступность в РФ: Высокая. Базовый сервер не блокируется." />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
