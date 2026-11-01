@@ -5,7 +5,8 @@ param(
 
     [switch]$ShowLocalOnly,
     [switch]$AsJson,
-    [switch]$NonInteractive
+    [switch]$NonInteractive,
+    [switch]$TestApis
 )
 
 $ProvidersList = @(
@@ -20,6 +21,103 @@ $ProvidersList = @(
     [PSCustomObject]@{ Id = "surfshark_com";     Num = 9;  Name = "surfshark.com";                         Url = "https://surfshark.com";   Description = "Публичный endpoint проверки от Surfshark" }
     [PSCustomObject]@{ Id = "adguard_dns";       Num = 10; Name = "adguard-dns.io";                       Url = "https://adguard-dns.io";  Description = "Проверка фильтрации и резолверов AdGuard" }
 )
+
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12 -bor 3072 -bor 12288
+
+function Invoke-SafeHttpJson {
+    param(
+        [string]$Uri,
+        [int]$TimeoutSec = 6
+    )
+
+    if (Get-Command "curl.exe" -ErrorAction SilentlyContinue) {
+        try {
+            $raw = & "curl.exe" -L -s -k --max-time $TimeoutSec $Uri 2>$null
+            if ($raw) {
+                $rawStr = ($raw -join "`n").Trim()
+                if ($rawStr.StartsWith("{") -or $rawStr.StartsWith("[")) {
+                    return ($rawStr | ConvertFrom-Json)
+                }
+            }
+        } catch { }
+
+        if ($Uri.Contains("bash.ws")) {
+            return $null
+        }
+    }
+
+    try {
+        $client = New-Object System.Net.Http.HttpClient
+        $client.Timeout = [System.TimeSpan]::FromSeconds($TimeoutSec)
+        $task = $client.GetStringAsync($Uri)
+        if ($task.Wait($TimeoutSec * 1000)) {
+            $jsonStr = $task.Result.Trim()
+            $client.Dispose()
+            if ($jsonStr.StartsWith("{") -or $jsonStr.StartsWith("[")) {
+                return ($jsonStr | ConvertFrom-Json)
+            }
+        }
+        $client.Dispose()
+    } catch { }
+
+    return $null
+}
+
+function Test-AllApisAvailability {
+    Clear-Host
+    Write-Host "==================================================================" -ForegroundColor Cyan
+    Write-Host "             ТЕСТИРОВАНИЕ ДОСТУПНОСТИ 10 ПУБЛИЧНЫХ API            " -ForegroundColor Cyan
+    Write-Host "==================================================================" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Проверка ответа серверов (выявление блокировок РКН / ТСПУ):" -ForegroundColor Yellow
+    Write-Host ""
+
+    $apiEndpoints = @(
+        @{ Id = "bash_ws";          Name = "bash.ws";              Url = "https://bash.ws/dnsleak" }
+        @{ Id = "ipleak_net";        Name = "ipleak.net";           Url = "https://ipleak.net/json/" }
+        @{ Id = "dnsleaktest_com";   Name = "dnsleaktest.com";      Url = "https://dnsleaktest.com" }
+        @{ Id = "browserleaks_com";  Name = "browserleaks.com";     Url = "https://browserleaks.com" }
+        @{ Id = "mullvad_net";       Name = "am.i.mullvad.net";     Url = "https://am.i.mullvad.net/json" }
+        @{ Id = "whoer_net";         Name = "whoer.net";            Url = "https://whoer.net" }
+        @{ Id = "edns_ip_api";       Name = "edns.ip-api.com";      Url = "http://edns.ip-api.com/json" }
+        @{ Id = "incolumitas_com";   Name = "incolumitas.com";      Url = "https://incolumitas.com" }
+        @{ Id = "surfshark_com";     Name = "surfshark.com";        Url = "https://surfshark.com" }
+        @{ Id = "adguard_dns";       Name = "adguard-dns.io";       Url = "https://adguard-dns.io" }
+    )
+
+    $idx = 1
+    foreach ($api in $apiEndpoints) {
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
+        $raw = $null
+        if (Get-Command "curl.exe" -ErrorAction SilentlyContinue) {
+            $raw = & "curl.exe" -L -s -k --max-time 4 $api.Url 2>$null
+        } else {
+            $raw = Invoke-SafeHttpJson -Uri $api.Url -TimeoutSec 4
+        }
+        $sw.Stop()
+
+        $numStr = "{0,2}" -f $idx
+        if ($raw -and ($raw.Length -gt 0 -or $raw.Count -gt 0)) {
+            Write-Host " [$numStr] " -NoNewline -ForegroundColor Green
+            Write-Host ("{0,-22}" -f $api.Name) -NoNewline -ForegroundColor White
+            Write-Host "ДОСТУПЕН " -NoNewline -ForegroundColor Green
+            Write-Host "($($sw.ElapsedMilliseconds) ms)" -ForegroundColor Gray
+        } else {
+            Write-Host " [$numStr] " -NoNewline -ForegroundColor Red
+            Write-Host ("{0,-22}" -f $api.Name) -NoNewline -ForegroundColor White
+            Write-Host "БЛОК / ТАЙМАУТ " -NoNewline -ForegroundColor Red
+            Write-Host "($($sw.ElapsedMilliseconds) ms)" -ForegroundColor DarkGray
+        }
+        $idx++
+    }
+
+    Write-Host ""
+    Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
+    if (-not $NonInteractive) {
+        Write-Host "Нажмите Enter для продолжения..." -ForegroundColor Cyan
+        Read-Host | Out-Null
+    }
+}
 
 function Get-LocalDnsConfiguration {
     $adapters = @()
@@ -93,6 +191,7 @@ function Show-InteractiveMenu {
     }
 
     Write-Host ""
+    Write-Host " [ T]  Проверить доступность всех 10 API (Тест на блокировки)" -ForegroundColor Magenta
     Write-Host " [ L]  Показать только локальные DNS-настройки адаптеров и роутера" -ForegroundColor DarkCyan
     Write-Host " [ Q]  Выход" -ForegroundColor Red
     Write-Host ""
@@ -101,6 +200,10 @@ function Show-InteractiveMenu {
     if ([string]::IsNullOrWhiteSpace($choice)) { return "bash_ws" }
     if ($choice -match "^(q|quit|exit)$") { exit 0 }
     if ($choice -match "^(l|local)$") { return "LOCAL_ONLY" }
+    if ($choice -match "^(t|test)$") {
+        Test-AllApisAvailability
+        return Show-InteractiveMenu
+    }
 
     $num = [int]::TryParse($choice, [ref]$null)
     if ($num) {
@@ -131,71 +234,101 @@ function Invoke-DnsLeakTest {
         switch ($SelectedProviderId) {
             "bash_ws" {
                 $testId = [System.Guid]::NewGuid().ToString().Replace("-", "").Substring(0, 10)
-                1..10 | ForEach-Object {
+                Write-Host "  [1/3] Отправка DNS probe-запросов к bash.ws..." -ForegroundColor DarkGray
+                1..6 | ForEach-Object {
                     $probeHost = "$_.$testId.bash.ws"
                     try { [System.Net.Dns]::GetHostAddresses($probeHost) | Out-Null } catch { }
                 }
 
-                Start-Sleep -Milliseconds 600
+                Write-Host "  [2/3] Ожидание регистрации на сервере..." -ForegroundColor DarkGray
+                Start-Sleep -Seconds 2
 
-                $resp = Invoke-RestMethod -Uri "https://bash.ws/dnsleak/test/$testId?json" -TimeoutSec 10 -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-                foreach ($item in $resp) {
-                    if ($item.type -eq "ip") {
-                        $clientIp = $item.ip
-                        $clientCountry = $item.country_name
-                        $clientIsp = "$($item.asn) $($item.as_org)".Trim()
-                    } elseif ($item.type -eq "dns") {
-                        $dnsServers += [PSCustomObject]@{
-                            Ip      = $item.ip
-                            Isp     = "$($item.asn) $($item.as_org)".Trim()
-                            Country = "$($item.country_name) ($($item.country))"
+                Write-Host "  [3/3] Загрузка результатов..." -ForegroundColor DarkGray
+                $resp = Invoke-SafeHttpJson -Uri "https://bash.ws/dnsleak/test/$testId?json" -TimeoutSec 7
+                if ($null -eq $resp -or $resp.error) {
+                    Write-Host "  Повторный запрос через 1.5 сек..." -ForegroundColor DarkGray
+                    Start-Sleep -Milliseconds 1500
+                    $resp = Invoke-SafeHttpJson -Uri "https://bash.ws/dnsleak/test/$testId?json" -TimeoutSec 7
+                }
+
+                if ($resp.error) {
+                    Write-Warning "Сервер bash.ws вернул: $($resp.error)"
+                } elseif ($resp) {
+                    foreach ($item in $resp) {
+                        if ($item.type -eq "ip") {
+                            $clientIp = $item.ip
+                            $clientCountry = $item.country_name
+                            $clientIsp = "$($item.asn) $($item.as_org)".Trim()
+                        } elseif ($item.type -eq "dns") {
+                            $dnsServers += [PSCustomObject]@{
+                                Ip      = $item.ip
+                                Isp     = "$($item.asn) $($item.as_org)".Trim()
+                                Country = "$($item.country_name) ($($item.country))"
+                            }
                         }
                     }
                 }
             }
 
             "edns_ip_api" {
-                $resp = Invoke-RestMethod -Uri "http://edns.ip-api.com/json" -TimeoutSec 10
+                Write-Host "  Запрос к edns.ip-api.com..." -ForegroundColor DarkGray
+                $resp = Invoke-SafeHttpJson -Uri "http://edns.ip-api.com/json" -TimeoutSec 6
+                if ($resp.dns) {
+                    $country = "Неизвестно"
+                    $isp = "Неизвестно"
+                    if ($resp.dns.geo) {
+                        $geoParts = $resp.dns.geo -split " - "
+                        $country = $geoParts[0]
+                        if ($geoParts.Count -gt 1) { $isp = $geoParts[1] } else { $isp = $country }
+                    } elseif ($resp.dns.isp) {
+                        $isp = $resp.dns.isp
+                        if ($resp.dns.country) { $country = $resp.dns.country }
+                    }
+                    $dnsServers += [PSCustomObject]@{
+                        Ip      = $resp.dns.ip
+                        Isp     = $isp
+                        Country = $country
+                    }
+                }
                 if ($resp.client) {
                     $clientIp = $resp.client.ip
                     $clientIsp = $resp.client.isp
                     $clientCountry = $resp.client.country
                 }
-                if ($resp.dns) {
-                    $dnsServers += [PSCustomObject]@{
-                        Ip      = $resp.dns.ip
-                        Isp     = $resp.dns.isp
-                        Country = $resp.dns.country
-                    }
-                }
             }
 
             "ipleak_net" {
-                $resp = Invoke-RestMethod -Uri "https://ipleak.net/json/" -TimeoutSec 10
-                $clientIp = $resp.ip
-                $clientIsp = $resp.isp_name
-                $clientCountry = "$($resp.country_name) ($($resp.country_code))"
-                
-                if ($resp.dns_resolvers) {
-                    $resp.dns_resolvers.PSObject.Properties | ForEach-Object {
-                        $val = $_.Value
-                        $dnsServers += [PSCustomObject]@{
-                            Ip      = $val.ip
-                            Isp     = $val.isp_name
-                            Country = "$($val.country_name) ($($val.country_code))"
+                Write-Host "  Запрос к ipleak.net..." -ForegroundColor DarkGray
+                $resp = Invoke-SafeHttpJson -Uri "https://ipleak.net/json/" -TimeoutSec 6
+                if ($resp) {
+                    $clientIp = $resp.ip
+                    $clientIsp = $resp.isp_name
+                    $clientCountry = "$($resp.country_name) ($($resp.country_code))"
+                    
+                    if ($resp.dns_resolvers) {
+                        $resp.dns_resolvers.PSObject.Properties | ForEach-Object {
+                            $val = $_.Value
+                            $dnsServers += [PSCustomObject]@{
+                                Ip      = $val.ip
+                                Isp     = $val.isp_name
+                                Country = "$($val.country_name) ($($val.country_code))"
+                            }
                         }
                     }
                 }
             }
 
             "mullvad_net" {
-                $resp = Invoke-RestMethod -Uri "https://am.i.mullvad.net/json" -TimeoutSec 10
-                $clientIp = $resp.ip
-                $clientIsp = $resp.organization
-                $clientCountry = $resp.country
+                Write-Host "  Запрос к am.i.mullvad.net..." -ForegroundColor DarkGray
+                $resp = Invoke-SafeHttpJson -Uri "https://am.i.mullvad.net/json" -TimeoutSec 6
+                if ($resp) {
+                    $clientIp = $resp.ip
+                    $clientIsp = $resp.organization
+                    $clientCountry = $resp.country
+                }
 
                 try {
-                    $dnsResp = Invoke-RestMethod -Uri "https://am.i.mullvad.net/dnsleak" -TimeoutSec 10
+                    $dnsResp = Invoke-SafeHttpJson -Uri "https://am.i.mullvad.net/dnsleak" -TimeoutSec 6
                     foreach ($d in $dnsResp) {
                         $dnsServers += [PSCustomObject]@{
                             Ip      = $d.ip
@@ -208,21 +341,33 @@ function Invoke-DnsLeakTest {
 
             default {
                 $testId = [System.Guid]::NewGuid().ToString().Replace("-", "").Substring(0, 10)
-                1..10 | ForEach-Object {
-                    try { [System.Net.Dns]::GetHostAddresses("$_.$testId.bash.ws") | Out-Null } catch { }
+                Write-Host "  [1/3] Отправка DNS probe-запросов..." -ForegroundColor DarkGray
+                1..6 | ForEach-Object {
+                    $probeHost = "$_.$testId.bash.ws"
+                    try { [System.Net.Dns]::GetHostAddresses($probeHost) | Out-Null } catch { }
                 }
-                Start-Sleep -Milliseconds 600
-                $resp = Invoke-RestMethod -Uri "https://bash.ws/dnsleak/test/$testId?json" -TimeoutSec 10
-                foreach ($item in $resp) {
-                    if ($item.type -eq "ip") {
-                        $clientIp = $item.ip
-                        $clientCountry = $item.country_name
-                        $clientIsp = "$($item.asn) $($item.as_org)".Trim()
-                    } elseif ($item.type -eq "dns") {
-                        $dnsServers += [PSCustomObject]@{
-                            Ip      = $item.ip
-                            Isp     = "$($item.asn) $($item.as_org)".Trim()
-                            Country = "$($item.country_name) ($($item.country))"
+                Write-Host "  [2/3] Ожидание регистрации на сервере..." -ForegroundColor DarkGray
+                Start-Sleep -Seconds 2
+                Write-Host "  [3/3] Загрузка результатов..." -ForegroundColor DarkGray
+                $resp = Invoke-SafeHttpJson -Uri "https://bash.ws/dnsleak/test/$testId?json" -TimeoutSec 7
+                if ($null -eq $resp -or $resp.error) {
+                    Start-Sleep -Milliseconds 1500
+                    $resp = Invoke-SafeHttpJson -Uri "https://bash.ws/dnsleak/test/$testId?json" -TimeoutSec 7
+                }
+                if ($resp.error) {
+                    Write-Warning "Сервер bash.ws вернул: $($resp.error)"
+                } elseif ($resp) {
+                    foreach ($item in $resp) {
+                        if ($item.type -eq "ip") {
+                            $clientIp = $item.ip
+                            $clientCountry = $item.country_name
+                            $clientIsp = "$($item.asn) $($item.as_org)".Trim()
+                        } elseif ($item.type -eq "dns") {
+                            $dnsServers += [PSCustomObject]@{
+                                Ip      = $item.ip
+                                Isp     = "$($item.asn) $($item.as_org)".Trim()
+                                Country = "$($item.country_name) ($($item.country))"
+                            }
                         }
                     }
                 }
@@ -272,7 +417,7 @@ function Invoke-DnsLeakTest {
 
         $isIspDns = ($isKnownRuIsp -or $matchesClientIsp) -and (-not $isSecure)
 
-        $serverLeak = false
+        $serverLeak = $false
         if ($isVpnActive) {
             if ($isIspDns -or $matchesClientIsp -or ($s.Country -match "Russia|RU" -and $clientCountry -notmatch "Russia|RU")) {
                 $serverLeak = $true
@@ -315,6 +460,11 @@ function Invoke-DnsLeakTest {
         DnsServers     = $analyzedDns
         LocalAdapters  = $LocalAdapters
     }
+}
+
+if ($TestApis) {
+    Test-AllApisAvailability
+    exit 0
 }
 
 $selectedProvider = $Provider
