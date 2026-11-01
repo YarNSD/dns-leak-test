@@ -85,7 +85,7 @@ class SettingsActivity : AppCompatActivity() {
                     .setTitle("Доступно обновление v${update.versionName}")
                     .setMessage(if (update.changelog.isNotBlank()) update.changelog else "Найдена новая версия на GitHub.")
                     .setPositiveButton("Обновить") { _, _ ->
-                        downloadAndInstall(update.apkUrl)
+                        downloadAndInstall(update.getBestApkUrl())
                     }
                     .setNegativeButton("Отмена", null)
                     .show()

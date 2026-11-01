@@ -1,6 +1,8 @@
 {
   "versionCode": 1,
   "versionName": "1.0.0",
-  "apkUrl": "https://raw.githubusercontent.com/YarNSD/dns-leak-test/main/DnsLeakTest.apk",
-  "changelog": "Первый релиз: проверка DNS на Android и Windows, детекция DNS провайдера, выбор из 10 API, тест доступности API на блокировки."
+  "apkUniversalUrl": "https://github.com/YarNSD/dns-leak-test/releases/download/v1.0.0/DnsLeakTest-universal.apk",
+  "apkArm64Url": "https://github.com/YarNSD/dns-leak-test/releases/download/v1.0.0/DnsLeakTest-arm64-v8a.apk",
+  "apkArmeabiUrl": "https://github.com/YarNSD/dns-leak-test/releases/download/v1.0.0/DnsLeakTest-armeabi-v7a.apk",
+  "changelog": "Релиз v1.0.0: поддержка архитектур arm64-v8a, armeabi-v7a и universal."
 }

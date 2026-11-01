@@ -219,7 +219,7 @@ class MainActivity : AppCompatActivity() {
                 .setTitle("Доступно обновление v${update.versionName}")
                 .setMessage(if (update.changelog.isNotBlank()) update.changelog else "Найдена новая версия на GitHub.")
                 .setPositiveButton("Обновить") { _, _ ->
-                    startApkDownload(update.apkUrl)
+                    startApkDownload(update.getBestApkUrl())
                 }
                 .setNegativeButton("Позже", null)
                 .show()

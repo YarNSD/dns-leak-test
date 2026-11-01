@@ -2,6 +2,7 @@ package com.dnsleak.test.service
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.core.content.FileProvider
 import com.dnsleak.test.BuildConfig
 import com.google.gson.Gson
@@ -17,9 +18,22 @@ import java.net.URL
 data class UpdateInfo(
     val versionCode: Int,
     val versionName: String,
-    val apkUrl: String,
-    val changelog: String
-)
+    val apkUniversalUrl: String? = null,
+    val apkArm64Url: String? = null,
+    val apkArmeabiUrl: String? = null,
+    val changelog: String = ""
+) {
+    fun getBestApkUrl(): String {
+        val abis = Build.SUPPORTED_ABIS
+        if (abis != null) {
+            for (abi in abis) {
+                if (abi.contains("arm64") && !apkArm64Url.isNullOrBlank()) return apkArm64Url
+                if (abi.contains("v7a") && !apkArmeabiUrl.isNullOrBlank()) return apkArmeabiUrl
+            }
+        }
+        return apkUniversalUrl ?: apkArm64Url ?: apkArmeabiUrl ?: ""
+    }
+}
 
 class AppUpdater(private val context: Context) {
 
@@ -61,17 +75,37 @@ class AppUpdater(private val context: Context) {
                 connectTimeout = 10000
                 readTimeout = 15000
                 requestMethod = "GET"
+                instanceFollowRedirects = true
                 setRequestProperty("User-Agent", "DnsLeakTest-App")
             }
 
-            if (conn.responseCode !in 200..299) return@withContext false
+            val code = conn.responseCode
+            val finalUrl = if (code in 301..308) {
+                val redirected = conn.getHeaderField("Location")
+                if (!redirected.isNullOrBlank()) URL(redirected) else url
+            } else {
+                url
+            }
+
+            val finalConn = if (finalUrl != url) {
+                (finalUrl.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 10000
+                    readTimeout = 15000
+                    requestMethod = "GET"
+                    setRequestProperty("User-Agent", "DnsLeakTest-App")
+                }
+            } else {
+                conn
+            }
+
+            if (finalConn.responseCode !in 200..299) return@withContext false
 
             val dir = File(context.cacheDir, "apk").apply { mkdirs() }
             val apkFile = File(dir, "update.apk")
             if (apkFile.exists()) apkFile.delete()
 
-            val totalLength = conn.contentLength
-            val input = conn.inputStream
+            val totalLength = finalConn.contentLength
+            val input = finalConn.inputStream
             val output = FileOutputStream(apkFile)
 
             val buffer = ByteArray(8192)
