@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="media/icon.png" width="120" height="120" alt="DNS Leak Test Icon">
+  <img src="media/icon.png" width="220" alt="DNS Leak Test Icon">
 </p>
 
 # DNS Leak Test
