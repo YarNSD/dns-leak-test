@@ -24,6 +24,7 @@
   - Работает на Windows 10/11 без установки сторонних модулей.
   - Анализирует настройки адаптеров, шлюз по умолчанию и DNS через .NET NetworkInterface.
   - Интерактивное меню выбора из 10 API либо запуск с параметрами командной строки (`-Provider`, `-ShowLocalOnly`, `-AsJson`).
+  - Возможность мгновенного запуска одной командой без скачивания файлов на диск.
 
 ## Установка и запуск
 
@@ -36,7 +37,18 @@
 Минимальная версия: Android 5.0 (Lollipop) и новее. При выходе новых версий приложение предложит обновиться автоматически.
 
 ### Windows (PowerShell)
-Запуск интерактивного меню:
+
+**Запуск одной строкой прямо из сети (без сохранения файлов):**
+```powershell
+irm https://raw.githubusercontent.com/YarNSD/dns-leak-test/main/Test-DnsLeak.ps1 | iex
+```
+
+Либо через окно `Win + R` или командную строку cmd:
+```powershell
+powershell -ExecutionPolicy Bypass -NoProfile -Command "irm https://raw.githubusercontent.com/YarNSD/dns-leak-test/main/Test-DnsLeak.ps1 | iex"
+```
+
+**Запуск скачанного файла с интерактивным меню:**
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Test-DnsLeak.ps1
 ```
