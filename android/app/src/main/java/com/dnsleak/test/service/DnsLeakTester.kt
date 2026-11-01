@@ -43,8 +43,7 @@ class DnsLeakTester(private val context: Context) {
 
         return@withContext try {
             when (provider.id) {
-                "bash_ws" -> testBashWs(provider, localDns, startTime)
-                "edns_ip_api" -> testEdnsIpApi(provider, localDns, startTime)
+                                "edns_ip_api" -> testEdnsIpApi(provider, localDns, startTime)
                 "ipleak_net" -> testIpLeakNet(provider, localDns, startTime)
                 "mullvad_net" -> testMullvad(provider, localDns, startTime)
                 "whoer_net" -> testWhoer(provider, localDns, startTime)
@@ -65,78 +64,6 @@ class DnsLeakTester(private val context: Context) {
                 rawReport = "Ошибка запроса к ${provider.url}: ${e.message}"
             )
         }
-    }
-
-    private fun testBashWs(
-        provider: DnsProvider,
-        localDns: LocalDnsInfo,
-        startTime: Long
-    ): DnsLeakResult {
-        val testId = UUID.randomUUID().toString().replace("-", "").take(10)
-
-        for (i in 1..10) {
-            try {
-                InetAddress.getAllByName("$i.$testId.bash.ws")
-            } catch (_: Exception) { }
-        }
-
-        Thread.sleep(700)
-
-        val jsonUrl = "https://bash.ws/dnsleak/test/$testId?json"
-        val response = httpGet(jsonUrl)
-
-        var clientIp = "Неизвестно"
-        var clientIsp = "Неизвестно"
-        var clientCountry = "Неизвестно"
-        val dnsItems = mutableListOf<DnsServerItem>()
-
-        val jsonArray = gson.fromJson(response, JsonArray::class.java)
-        for (elem in jsonArray) {
-            val obj = elem.asJsonObject
-            val type = obj.get("type")?.asString ?: ""
-            val ip = obj.get("ip")?.asString ?: ""
-            val country = obj.get("country_name")?.asString ?: "Неизвестно"
-            val asn = obj.get("asn")?.asString ?: ""
-            val asOrg = obj.get("as_org")?.asString ?: ""
-            val isp = if (asn.isNotEmpty()) "$asn $asOrg".trim() else asOrg
-
-            if (type == "ip") {
-                clientIp = ip
-                clientIsp = isp
-                clientCountry = country
-            } else if (type == "dns") {
-                val source = determineDnsSource(ip, localDns)
-                val analysis = evaluateDnsServer(isp, country, clientIsp, clientCountry, localDns)
-
-                dnsItems.add(
-                    DnsServerItem(
-                        ip = ip,
-                        isp = isp.ifEmpty { "Неизвестный провайдер" },
-                        country = country,
-                        countryCode = obj.get("country")?.asString ?: "",
-                        sourceAttribution = source,
-                        isIspDns = analysis.isIspDns,
-                        isLeak = analysis.isLeak,
-                        statusText = analysis.statusText
-                    )
-                )
-            }
-        }
-
-        val overallLeak = dnsItems.any { it.isLeak }
-        val duration = System.currentTimeMillis() - startTime
-
-        return DnsLeakResult(
-            clientIp = clientIp,
-            clientIsp = clientIsp,
-            clientCountry = clientCountry,
-            servers = dnsItems,
-            isOverallLeak = overallLeak,
-            providerName = provider.name,
-            testDurationMs = duration,
-            localDnsInfo = localDns,
-            rawReport = response
-        )
     }
 
     private fun testEdnsIpApi(
@@ -300,7 +227,7 @@ class DnsLeakTester(private val context: Context) {
         localDns: LocalDnsInfo,
         startTime: Long
     ): DnsLeakResult {
-        return testBashWs(provider, localDns, startTime)
+        return testEdnsIpApi(provider, localDns, startTime)
     }
 
     private fun testAdguard(
@@ -357,7 +284,7 @@ class DnsLeakTester(private val context: Context) {
         localDns: LocalDnsInfo,
         startTime: Long
     ): DnsLeakResult {
-        return testBashWs(provider, localDns, startTime)
+        return testEdnsIpApi(provider, localDns, startTime)
     }
 
     private fun determineDnsSource(resolverIp: String, localDns: LocalDnsInfo): String {

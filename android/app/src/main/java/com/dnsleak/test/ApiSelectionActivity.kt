@@ -37,7 +37,7 @@ class ApiSelectionActivity : AppCompatActivity() {
 
         val prefs = getSharedPreferences("dns_leak_prefs", Context.MODE_PRIVATE)
         val currentId = intent.getStringExtra(EXTRA_SELECTED_ID)
-            ?: prefs.getString(EXTRA_SELECTED_ID, "bash_ws") ?: "bash_ws"
+            ?: prefs.getString(EXTRA_SELECTED_ID, "edns_ip_api") ?: "edns_ip_api"
 
         binding.toolbarApi.setNavigationOnClickListener {
             finish()

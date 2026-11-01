@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val selectedId = result.data?.getStringExtra(SettingsActivity.EXTRA_SELECTED_ID)
-                ?: prefs.getString(PREF_KEY_PROVIDER_ID, "bash_ws") ?: "bash_ws"
+                ?: prefs.getString(PREF_KEY_PROVIDER_ID, "edns_ip_api") ?: "edns_ip_api"
             currentProvider = DnsProvider.getById(selectedId)
             updateProviderHeader()
             Toast.makeText(this, "Выбран API: ${currentProvider.name}", Toast.LENGTH_SHORT).show()
@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadSavedProvider() {
-        val savedId = prefs.getString(PREF_KEY_PROVIDER_ID, "bash_ws") ?: "bash_ws"
+        val savedId = prefs.getString(PREF_KEY_PROVIDER_ID, "edns_ip_api") ?: "edns_ip_api"
         currentProvider = DnsProvider.getById(savedId)
         updateProviderHeader()
     }
