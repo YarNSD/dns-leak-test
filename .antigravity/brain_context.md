@@ -13,10 +13,11 @@ Accurately detects whether DNS queries are hijacked by Russian ISPs (Rostelecom,
    - Zero emojis policy in UI, clean ASCII borders, color-coded status verdicts.
 
 2. **Android Application (`android/`)**:
-   - Native Kotlin + MVVM architecture, clean Material UI.
-   - Minimalist top bar: wide "Проверка" button + gear settings button.
-   - Active connection detection (Wi-Fi router vs Cellular LTE/5G).
-   - Android Private DNS (DoT) system status detection.
+   - Native Kotlin + MVVM architecture, ultra-modern dark theme (`#0B0F17`, rounded squircles, circular icon pods).
+   - Floating capsule bottom navigation bar (`#151C28` pill with active cyan `#38BDF8` pod) switching between 3 core tools:
+     1. **Утечка DNS**: Full leak test, active interface detection, Private DNS status, DoH/DoT detection.
+     2. **Проверка CDN**: CNAME chain resolution, reverse CDN IP ASN classification (Cloudflare, Akamai, Fastly, GCore, etc.).
+     3. **Домены сервисов**: Instant autocomplete search across 50+ services from `v2fly/domain-list-community`, interactive CDN badges, scrollable domain column, one-tap copy.
    - Built-in latency ping tester for all 9 APIs to identify blocked endpoints.
    - ABI splits (`arm64-v8a`, `armeabi-v7a`, `universal`).
 

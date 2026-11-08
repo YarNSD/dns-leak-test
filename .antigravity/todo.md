@@ -1,5 +1,5 @@
 # DNS Leak Test: Tactical Tasks & Roadmap
 
 ## Active Tasks
-- [ ] Monitor user feedback on newly uploaded `v1.0.0` APKs and remote PowerShell invocation.
-- [ ] Maintain 9 public DNS test APIs and ensure resilient fallback across all network environments.
+- [ ] Test the new floating bottom navigation and smooth domain scrolling on Android device with user.
+- [ ] Await user approval before publishing/pushing new features and updated APKs to GitHub repository.

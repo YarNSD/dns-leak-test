@@ -1,298 +1,1850 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <androidx.core.widget.NestedScrollView
+    <!-- Main Content Container with Top Header -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:orientation="vertical">
 
+        <!-- Top Header: Category Subtitle + Main Title + Circular Settings Pod -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="16dp"
             android:paddingTop="16dp"
-            android:paddingBottom="32dp">
+            android:paddingBottom="10dp">
 
-            <!-- App Title -->
             <TextView
-                android:id="@+id/tvTitle"
-                android:layout_width="match_parent"
+                android:id="@+id/tvCategorySubtitle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="DNS LEAK TEST"
-                android:textColor="@color/on_surface"
-                android:textSize="20sp"
+                android:letterSpacing="0.08"
+                android:text="NETWORK SECURITY &amp; DIAGNOSTICS"
+                android:textColor="@color/on_surface_variant"
+                android:textSize="10sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tvCurrentApiHeader"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Активный API: bash.ws"
-                android:textColor="@color/on_surface_variant"
-                android:textSize="13sp" />
-
-            <!-- Top Row: Button "Проверка" + Button Settings (Gear) -->
-            <LinearLayout
-                android:id="@+id/layoutActionButtons"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="12dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnCheck"
+                <TextView
+                    android:id="@+id/tvTitle"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:maxLines="1"
-                    android:text="Проверка"
-                    android:textAllCaps="false"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    app:cornerRadius="8dp" />
+                    android:text="DNS &amp; CDN Inspector"
+                    android:textColor="@color/on_surface"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
 
-                <Space
-                    android:layout_width="10dp"
-                    android:layout_height="1dp" />
-
-                <com.google.android.material.button.MaterialButton
+                <!-- Circular Settings Pod -->
+                <FrameLayout
                     android:id="@+id/btnSettings"
-                    style="@style/Widget.Material3.Button.TonalButton"
-                    android:layout_width="54dp"
-                    android:layout_height="match_parent"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/bg_icon_pod"
+                    android:clickable="true"
                     android:contentDescription="Настройки"
-                    android:insetLeft="0dp"
-                    android:insetTop="0dp"
-                    android:insetRight="0dp"
-                    android:insetBottom="0dp"
-                    android:padding="0dp"
-                    app:cornerRadius="8dp"
-                    app:icon="@drawable/ic_settings"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconTint="@color/on_surface" />
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        app:srcCompat="@drawable/ic_settings"
+                        app:tint="@color/on_surface" />
+                </FrameLayout>
             </LinearLayout>
-
-            <!-- ГРУППА 1: СТАТУС ЗАЩИТЫ (ВЕРДИКТ) -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="10dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="СТАТУС ЗАЩИТЫ DNS"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvVerdict"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="@string/status_ready"
-                        android:textColor="@color/on_surface"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvVerdictDescription"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="Нажмите кнопку «Проверка» для тестирования утечки DNS"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="13sp" />
-
-                    <ProgressBar
-                        android:id="@+id/progressBar"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="4dp"
-                        android:layout_marginTop="10dp"
-                        android:indeterminate="true"
-                        android:visibility="gone" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ГРУППА 2: ВАШЕ ПОДКЛЮЧЕНИЕ (КЛИЕНТ) -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardClientGroup"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="10dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ВАШЕ ПОДКЛЮЧЕНИЕ (ВНЕШНИЙ IP)"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvClientIp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:fontFamily="monospace"
-                        android:text="IP-адрес: —"
-                        android:textColor="@color/on_surface"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvClientIsp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Провайдер: Ожидание проверки..."
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/tvClientLocation"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Локация: —"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/tvClientVpnStatus"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="VPN туннель: Проверка интерфейсов..."
-                        android:textColor="@color/status_info_text"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ГРУППА 3: ЛОКАЛЬНАЯ КОНФИГУРАЦИЯ DNS -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardLocalGroup"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="10dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ЛОКАЛЬНАЯ КОНФИГУРАЦИЯ DNS"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvLocalActiveDns"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="Определение активного DNS..."
-                        android:textColor="@color/on_surface"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvLocalSecondaryDns"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:text=""
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ГРУППА 4: ОБНАРУЖЕННЫЕ ВНЕШНИЕ DNS-РЕЗОЛВЕРЫ -->
-            <TextView
-                android:id="@+id/tvDnsListHeader"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="ОБНАРУЖЕННЫЕ DNS-РЕЗОЛВЕРЫ"
-                android:textColor="@color/on_surface"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvDnsListSubheader"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Серверы, через которые обрабатываются ваши запросы к сайтам"
-                android:textColor="@color/on_surface_variant"
-                android:textSize="12sp" />
-
-            <!-- Nested RecyclerView for DNS cards -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvDnsServers"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:nestedScrollingEnabled="false" />
-
-            <TextView
-                android:id="@+id/tvEmptyList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center"
-                android:padding="16dp"
-                android:text="@string/no_servers_found"
-                android:textColor="@color/on_surface_variant"
-                android:textSize="13sp"
-                android:visibility="gone" />
-
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+        <!-- Screen Content Container (Fills remaining height) -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <!-- Tab 1: DNS Leak Content -->
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/layoutDnsLeakContent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:fillViewport="true"
+                android:paddingBottom="96dp"
+                android:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="8dp">
+
+                    <!-- Active API info -->
+                    <TextView
+                        android:id="@+id/tvCurrentApiHeader"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Активный API: edns.ip-api.com"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="12sp" />
+
+                    <!-- Action Button: "Проверка" -->
+                    <LinearLayout
+                        android:id="@+id/layoutActionButtons"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnCheck"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:backgroundTint="@color/accent_cyan"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:maxLines="1"
+                            android:text="Проверка утечки DNS"
+                            android:textAllCaps="false"
+                            android:textColor="@color/on_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            app:cornerRadius="14dp" />
+                    </LinearLayout>
+
+                    <!-- ГРУППА 1: СТАТУС ЗАЩИТЫ (ВЕРДИКТ) -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:cardBackgroundColor="@color/surface"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/divider"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <FrameLayout
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:background="@drawable/bg_icon_pod">
+
+                                    <ImageView
+                                        android:layout_width="16dp"
+                                        android:layout_height="16dp"
+                                        android:layout_gravity="center"
+                                        app:srcCompat="@drawable/ic_shield"
+                                        app:tint="@color/accent_cyan" />
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_weight="1"
+                                    android:letterSpacing="0.06"
+                                    android:text="СТАТУС ЗАЩИТЫ DNS"
+                                    android:textColor="@color/on_surface_variant"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold" />
+
+                                <ImageView
+                                    android:id="@+id/btnHelpDnsStatus"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:clickable="true"
+                                    android:contentDescription="Справка"
+                                    android:focusable="true"
+                                    android:padding="2dp"
+                                    app:srcCompat="@drawable/ic_help_circle"
+                                    app:tint="@color/on_surface_variant" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvVerdict"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:text="@string/status_ready"
+                                android:textColor="@color/on_surface"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvVerdictDescription"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Нажмите кнопку «Проверка» для тестирования утечки DNS"
+                                android:textColor="@color/on_surface_variant"
+                                android:textSize="13sp" />
+
+                            <ProgressBar
+                                android:id="@+id/progressBar"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:layout_marginTop="12dp"
+                                android:indeterminate="true"
+                                android:visibility="gone" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- ГРУППА 2: ВАШЕ ПОДКЛЮЧЕНИЕ (КЛИЕНТ) -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardClientGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        app:cardBackgroundColor="@color/surface"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/divider"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <FrameLayout
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:background="@drawable/bg_icon_pod">
+
+                                    <ImageView
+                                        android:layout_width="16dp"
+                                        android:layout_height="16dp"
+                                        android:layout_gravity="center"
+                                        app:srcCompat="@drawable/ic_globe"
+                                        app:tint="@color/accent_cyan" />
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_weight="1"
+                                    android:letterSpacing="0.06"
+                                    android:text="ВАШЕ ПОДКЛЮЧЕНИЕ (ВНЕШНИЙ IP)"
+                                    android:textColor="@color/on_surface_variant"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold" />
+
+                                <ImageView
+                                    android:id="@+id/btnHelpClientConnection"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:clickable="true"
+                                    android:contentDescription="Справка"
+                                    android:focusable="true"
+                                    android:padding="2dp"
+                                    app:srcCompat="@drawable/ic_help_circle"
+                                    app:tint="@color/on_surface_variant" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvClientIp"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:fontFamily="monospace"
+                                android:text="IP-адрес: —"
+                                android:textColor="@color/accent_cyan"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvClientIsp"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:text="Провайдер: Ожидание проверки..."
+                                android:textColor="@color/on_surface"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tvClientLocation"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="Локация: —"
+                                android:textColor="@color/on_surface_variant"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/tvClientVpnStatus"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:text="VPN туннель: Проверка интерфейсов..."
+                                android:textColor="@color/status_info_text"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- ГРУППА 3: ЛОКАЛЬНАЯ КОНФИГУРАЦИЯ DNS -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardLocalGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        app:cardBackgroundColor="@color/surface"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/divider"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <FrameLayout
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:background="@drawable/bg_icon_pod">
+
+                                    <ImageView
+                                        android:layout_width="16dp"
+                                        android:layout_height="16dp"
+                                        android:layout_gravity="center"
+                                        app:srcCompat="@drawable/ic_router"
+                                        app:tint="@color/accent_cyan" />
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_weight="1"
+                                    android:letterSpacing="0.06"
+                                    android:text="ЛОКАЛЬНАЯ КОНФИГУРАЦИЯ DNS"
+                                    android:textColor="@color/on_surface_variant"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold" />
+
+                                <ImageView
+                                    android:id="@+id/btnHelpLocalDns"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:clickable="true"
+                                    android:contentDescription="Справка"
+                                    android:focusable="true"
+                                    android:padding="2dp"
+                                    app:srcCompat="@drawable/ic_help_circle"
+                                    app:tint="@color/on_surface_variant" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvLocalActiveDns"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:text="Определение активного DNS..."
+                                android:textColor="@color/on_surface"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvLocalSecondaryDns"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:text=""
+                                android:textColor="@color/on_surface_variant"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- ГРУППА 4: ОБНАРУЖЕННЫЕ ВНЕШНИЕ DNS-РЕЗОЛВЕРЫ -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tvDnsListHeader"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:letterSpacing="0.06"
+                            android:text="ОБНАРУЖЕННЫЕ DNS-РЕЗОЛВЕРЫ"
+                            android:textColor="@color/on_surface"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/btnHelpResolvers"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:clickable="true"
+                            android:contentDescription="Справка"
+                            android:focusable="true"
+                            android:padding="2dp"
+                            app:srcCompat="@drawable/ic_help_circle"
+                            app:tint="@color/on_surface_variant" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvDnsListSubheader"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Серверы, через которые обрабатываются ваши запросы к сайтам"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="12sp" />
+
+                    <!-- Nested RecyclerView for DNS cards -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvDnsServers"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:nestedScrollingEnabled="false" />
+
+                    <TextView
+                        android:id="@+id/tvEmptyList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:text="@string/no_servers_found"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+
+            <!-- Tab 2: CDN Check Content -->
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/layoutCdnContent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:fillViewport="true"
+                android:paddingBottom="96dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="8dp">
+
+                    <!-- Card: Input Domain -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="@color/surface"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/divider"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <FrameLayout
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:background="@drawable/bg_icon_pod">
+
+                                    <ImageView
+                                        android:layout_width="16dp"
+                                        android:layout_height="16dp"
+                                        android:layout_gravity="center"
+                                        app:srcCompat="@drawable/ic_search"
+                                        app:tint="@color/accent_cyan" />
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_weight="1"
+                                    android:letterSpacing="0.06"
+                                    android:text="ЦЕЛЕВОЙ ДОМЕН ДЛЯ ПРОВЕРКИ CDN"
+                                    android:textColor="@color/on_surface_variant"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold" />
+
+                                <ImageView
+                                    android:id="@+id/btnHelpCdnInput"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:clickable="true"
+                                    android:contentDescription="Справка"
+                                    android:focusable="true"
+                                    android:padding="2dp"
+                                    app:srcCompat="@drawable/ic_help_circle"
+                                    app:tint="@color/on_surface_variant" />
+                            </LinearLayout>
+
+                            <!-- Input Box -->
+                            <EditText
+                                android:id="@+id/etCdnDomain"
+                                android:layout_width="match_parent"
+                                android:layout_height="48dp"
+                                android:layout_marginTop="12dp"
+                                android:background="@drawable/bg_tab_active"
+                                android:fontFamily="monospace"
+                                android:hint="habr.com или https://apple.com"
+                                android:imeOptions="actionDone"
+                                android:inputType="textUri"
+                                android:paddingHorizontal="14dp"
+                                android:singleLine="true"
+                                android:textColor="@color/on_surface"
+                                android:textColorHint="@color/on_surface_variant"
+                                android:textSize="14sp" />
+
+                            <!-- Quick Preset Chips -->
+                            <HorizontalScrollView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:scrollbars="none">
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:id="@+id/chipHabr"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="habr.com"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipApple"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="apple.com"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipReddit"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="reddit.com"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipRutracker"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="rutracker.org"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipCloudflare"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="cloudflare.com"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipVk"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="vk.com"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+                                </LinearLayout>
+                            </HorizontalScrollView>
+
+                            <!-- Check Button -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnCheckCdn"
+                                android:layout_width="match_parent"
+                                android:layout_height="48dp"
+                                android:layout_marginTop="12dp"
+                                android:backgroundTint="@color/accent_cyan"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:text="Проверить CDN"
+                                android:textAllCaps="false"
+                                android:textColor="@color/on_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                app:cornerRadius="14dp" />
+
+                            <ProgressBar
+                                android:id="@+id/progressCdn"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="4dp"
+                                android:layout_marginTop="10dp"
+                                android:indeterminate="true"
+                                android:visibility="gone" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Results Container -->
+                    <LinearLayout
+                        android:id="@+id/layoutCdnResults"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <!-- Result Card 1: CDN Service Name & Verdict -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardCdnService"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            app:cardBackgroundColor="@color/surface"
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/divider"
+                            app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <FrameLayout
+                                        android:layout_width="32dp"
+                                        android:layout_height="32dp"
+                                        android:background="@drawable/bg_icon_pod">
+
+                                        <ImageView
+                                            android:layout_width="16dp"
+                                            android:layout_height="16dp"
+                                            android:layout_gravity="center"
+                                            app:srcCompat="@drawable/ic_cloud_cdn"
+                                            app:tint="@color/accent_cyan" />
+                                    </FrameLayout>
+
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="10dp"
+                                        android:layout_weight="1"
+                                        android:letterSpacing="0.06"
+                                        android:text="СЕРВИС CDN"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="10sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvCdnStatusBadge"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:background="@drawable/badge_safe_bg"
+                                        android:paddingHorizontal="8dp"
+                                        android:paddingVertical="4dp"
+                                        android:text="CDN ОБНАРУЖЕН"
+                                        android:textColor="@color/status_safe_text"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+
+                                    <ImageView
+                                        android:id="@+id/btnHelpCdnService"
+                                        android:layout_width="22dp"
+                                        android:layout_height="22dp"
+                                        android:layout_marginStart="8dp"
+                                        android:clickable="true"
+                                        android:contentDescription="Справка"
+                                        android:focusable="true"
+                                        android:padding="2dp"
+                                        app:srcCompat="@drawable/ic_help_circle"
+                                        app:tint="@color/on_surface_variant" />
+                                </LinearLayout>
+
+                                <!-- Main Big Service Name -->
+                                <TextView
+                                    android:id="@+id/tvCdnServiceName"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="10dp"
+                                    android:text="Cloudflare"
+                                    android:textColor="@color/on_surface"
+                                    android:textSize="22sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/tvCdnDetectionMethod"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="Обнаружен по: CNAME, HTTP-заголовкам и ASN"
+                                    android:textColor="@color/on_surface_variant"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Result Card 2: CDN Domains (CNAME chain) -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardCdnDomains"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            app:cardBackgroundColor="@color/surface"
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/divider"
+                            app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:letterSpacing="0.06"
+                                        android:text="СПИСОК ДОМЕНОВ CDN (CNAME-ЦЕПОЧКА)"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="10sp"
+                                        android:textStyle="bold" />
+
+                                    <ImageView
+                                        android:id="@+id/btnHelpCdnDomains"
+                                        android:layout_width="22dp"
+                                        android:layout_height="22dp"
+                                        android:clickable="true"
+                                        android:contentDescription="Справка"
+                                        android:focusable="true"
+                                        android:padding="2dp"
+                                        app:srcCompat="@drawable/ic_help_circle"
+                                        app:tint="@color/on_surface_variant" />
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/tvCdnDomainsList"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:fontFamily="monospace"
+                                    android:lineSpacingExtra="4dp"
+                                    android:text="—"
+                                    android:textColor="@color/accent_cyan"
+                                    android:textSize="13sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Result Card 3: Edge IPs & ASN -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardCdnEdgeIps"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            app:cardBackgroundColor="@color/surface"
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/divider"
+                            app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:letterSpacing="0.06"
+                                        android:text="ПОГРАНИЧНЫЕ УЗЛЫ И АВТОНОМНЫЕ СИСТЕМЫ (ASN)"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="10sp"
+                                        android:textStyle="bold" />
+
+                                    <ImageView
+                                        android:id="@+id/btnHelpCdnEdgeIps"
+                                        android:layout_width="22dp"
+                                        android:layout_height="22dp"
+                                        android:clickable="true"
+                                        android:contentDescription="Справка"
+                                        android:focusable="true"
+                                        android:padding="2dp"
+                                        app:srcCompat="@drawable/ic_help_circle"
+                                        app:tint="@color/on_surface_variant" />
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/tvCdnEdgeIpsList"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:lineSpacingExtra="4dp"
+                                    android:text="—"
+                                    android:textColor="@color/on_surface"
+                                    android:textSize="13sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Result Card 4: HTTP Evidence Headers -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardCdnHeaders"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            app:cardBackgroundColor="@color/surface"
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/divider"
+                            app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:letterSpacing="0.06"
+                                        android:text="СИГНАТУРЫ И HTTP-ЗАГОЛОВКИ"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="10sp"
+                                        android:textStyle="bold" />
+
+                                    <ImageView
+                                        android:id="@+id/btnHelpCdnHeaders"
+                                        android:layout_width="22dp"
+                                        android:layout_height="22dp"
+                                        android:clickable="true"
+                                        android:contentDescription="Справка"
+                                        android:focusable="true"
+                                        android:padding="2dp"
+                                        app:srcCompat="@drawable/ic_help_circle"
+                                        app:tint="@color/on_surface_variant" />
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/tvCdnHeadersList"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:fontFamily="monospace"
+                                    android:lineSpacingExtra="4dp"
+                                    android:text="—"
+                                    android:textColor="@color/on_surface_variant"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+
+            <!-- Tab 3: Service Domains Content -->
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/layoutServicesContent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:fillViewport="true"
+                android:paddingBottom="96dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="8dp">
+
+                    <!-- Card: Service Search & Autocomplete Assistant -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="@color/surface"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/divider"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <FrameLayout
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:background="@drawable/bg_icon_pod">
+
+                                    <ImageView
+                                        android:layout_width="16dp"
+                                        android:layout_height="16dp"
+                                        android:layout_gravity="center"
+                                        app:srcCompat="@drawable/ic_domain_list"
+                                        app:tint="@color/accent_cyan" />
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_weight="1"
+                                    android:letterSpacing="0.06"
+                                    android:text="ПОИСК СЕРВИСА И ЕГО ДОМЕНОВ"
+                                    android:textColor="@color/on_surface_variant"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold" />
+
+                                <ImageView
+                                    android:id="@+id/btnHelpSearch"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:clickable="true"
+                                    android:contentDescription="Справка"
+                                    android:focusable="true"
+                                    android:padding="2dp"
+                                    app:srcCompat="@drawable/ic_help_circle"
+                                    app:tint="@color/on_surface_variant" />
+                            </LinearLayout>
+
+                            <!-- Autocomplete Input Box -->
+                            <AutoCompleteTextView
+                                android:id="@+id/actvServiceSearch"
+                                android:layout_width="match_parent"
+                                android:layout_height="48dp"
+                                android:layout_marginTop="12dp"
+                                android:background="@drawable/bg_tab_active"
+                                android:completionThreshold="1"
+                                android:dropDownHeight="220dp"
+                                android:hint="Введите сервис (напр. you → YouTube, c → Cloudflare)"
+                                android:imeOptions="actionDone"
+                                android:inputType="text"
+                                android:paddingHorizontal="14dp"
+                                android:singleLine="true"
+                                android:textColor="@color/on_surface"
+                                android:textColorHint="@color/on_surface_variant"
+                                android:textSize="14sp" />
+
+                            <!-- Quick Preset Service Chips -->
+                            <HorizontalScrollView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:scrollbars="none">
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:id="@+id/chipServiceYoutube"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="YouTube"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipServiceCloudflare"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="Cloudflare"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipServiceChatgpt"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="ChatGPT"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipServiceGemini"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="Gemini"
+                                        android:textColor="@color/on_primary"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipServiceTelegram"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="Telegram"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipServiceDiscord"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="Discord"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipServiceSteam"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="Steam"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipServiceVk"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="VK"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+
+                                    <TextView
+                                        android:id="@+id/chipServiceRutracker"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:background="@drawable/bg_chip_squircle"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingHorizontal="10dp"
+                                        android:paddingVertical="5dp"
+                                        android:text="RuTracker"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="12sp" />
+                                </LinearLayout>
+                            </HorizontalScrollView>
+
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Card: Download RuleSets (Geosite & GeoIP Dat Files) -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        app:cardBackgroundColor="@color/surface"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/divider"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <FrameLayout
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:background="@drawable/bg_icon_pod">
+
+                                    <ImageView
+                                        android:layout_width="16dp"
+                                        android:layout_height="16dp"
+                                        android:layout_gravity="center"
+                                        app:srcCompat="@drawable/ic_download"
+                                        app:tint="@color/accent_cyan" />
+                                </FrameLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:letterSpacing="0.06"
+                                        android:text="СКАЧАТЬ RULESETS"
+                                        android:textColor="@color/on_surface"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="2dp"
+                                        android:text="Официальные .dat базы правил для клиентов (V2Ray, Xray, Sing-box, Clash)"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="11sp" />
+                                </LinearLayout>
+
+                                <ImageView
+                                    android:id="@+id/btnHelpRuleSets"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:layout_marginStart="8dp"
+                                    android:clickable="true"
+                                    android:contentDescription="Справка"
+                                    android:focusable="true"
+                                    android:padding="2dp"
+                                    app:srcCompat="@drawable/ic_help_circle"
+                                    app:tint="@color/on_surface_variant" />
+                            </LinearLayout>
+
+                            <!-- Two Action Buttons with Copy Pods -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal">
+
+                                <!-- Item 1: Geosite Button & Copy -->
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="44dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/bg_chip_squircle"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal"
+                                    android:paddingStart="4dp"
+                                    android:paddingEnd="4dp">
+
+                                    <!-- Main Download Geosite Button -->
+                                    <LinearLayout
+                                        android:id="@+id/btnDownloadGeosite"
+                                        android:layout_width="0dp"
+                                        android:layout_height="match_parent"
+                                        android:layout_weight="1"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:gravity="center"
+                                        android:orientation="horizontal"
+                                        android:paddingHorizontal="6dp">
+
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="Geosite"
+                                            android:textColor="@color/on_surface"
+                                            android:textSize="13sp"
+                                            android:textStyle="bold" />
+                                    </LinearLayout>
+
+                                    <!-- Divider -->
+                                    <View
+                                        android:layout_width="1dp"
+                                        android:layout_height="22dp"
+                                        android:background="@color/divider" />
+
+                                    <!-- Copy Button -->
+                                    <FrameLayout
+                                        android:id="@+id/btnCopyGeositeUrl"
+                                        android:layout_width="38dp"
+                                        android:layout_height="38dp"
+                                        android:clickable="true"
+                                        android:contentDescription="Скопировать ссылку на geosite.dat"
+                                        android:focusable="true">
+
+                                        <ImageView
+                                            android:layout_width="15dp"
+                                            android:layout_height="15dp"
+                                            android:layout_gravity="center"
+                                            app:srcCompat="@drawable/ic_copy"
+                                            app:tint="@color/accent_cyan" />
+                                    </FrameLayout>
+                                </LinearLayout>
+
+                                <Space
+                                    android:layout_width="10dp"
+                                    android:layout_height="wrap_content" />
+
+                                <!-- Item 2: Geoip Button & Copy -->
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="44dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/bg_chip_squircle"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal"
+                                    android:paddingStart="4dp"
+                                    android:paddingEnd="4dp">
+
+                                    <!-- Main Download Geoip Button -->
+                                    <LinearLayout
+                                        android:id="@+id/btnDownloadGeoip"
+                                        android:layout_width="0dp"
+                                        android:layout_height="match_parent"
+                                        android:layout_weight="1"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:gravity="center"
+                                        android:orientation="horizontal"
+                                        android:paddingHorizontal="6dp">
+
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="Geoip"
+                                            android:textColor="@color/on_surface"
+                                            android:textSize="13sp"
+                                            android:textStyle="bold" />
+                                    </LinearLayout>
+
+                                    <!-- Divider -->
+                                    <View
+                                        android:layout_width="1dp"
+                                        android:layout_height="22dp"
+                                        android:background="@color/divider" />
+
+                                    <!-- Copy Button -->
+                                    <FrameLayout
+                                        android:id="@+id/btnCopyGeoipUrl"
+                                        android:layout_width="38dp"
+                                        android:layout_height="38dp"
+                                        android:clickable="true"
+                                        android:contentDescription="Скопировать ссылку на geoip.dat"
+                                        android:focusable="true">
+
+                                        <ImageView
+                                            android:layout_width="15dp"
+                                            android:layout_height="15dp"
+                                            android:layout_gravity="center"
+                                            app:srcCompat="@drawable/ic_copy"
+                                            app:tint="@color/accent_cyan" />
+                                    </FrameLayout>
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Results Container: Service Details & Domains Column Window -->
+                    <LinearLayout
+                        android:id="@+id/layoutServiceResults"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <!-- Service Info & CDN Status Card -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            app:cardBackgroundColor="@color/surface"
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/divider"
+                            app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:id="@+id/tvSelectedServiceName"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="YouTube"
+                                        android:textColor="@color/on_surface"
+                                        android:textSize="22sp"
+                                        android:textStyle="bold" />
+
+                                    <ImageView
+                                        android:id="@+id/btnHelpServiceCdn"
+                                        android:layout_width="22dp"
+                                        android:layout_height="22dp"
+                                        android:clickable="true"
+                                        android:contentDescription="Справка"
+                                        android:focusable="true"
+                                        android:padding="2dp"
+                                        app:srcCompat="@drawable/ic_help_circle"
+                                        app:tint="@color/on_surface_variant" />
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/tvSelectedServiceDomain"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Основной домен: youtube.com"
+                                    android:textColor="@color/on_surface_variant"
+                                    android:textSize="13sp" />
+
+                                <!-- Interactive CDN Status Pill Badge -->
+                                <LinearLayout
+                                    android:id="@+id/layoutServiceCdnBadge"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="10dp"
+                                    android:background="@drawable/badge_safe_bg"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal"
+                                    android:paddingHorizontal="10dp"
+                                    android:paddingVertical="6dp">
+
+                                    <TextView
+                                        android:id="@+id/tvServiceCdnBadge"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="ЗА CDN: Google Cloud CDN"
+                                        android:textColor="@color/status_safe_text"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+
+                                    <ImageView
+                                        android:id="@+id/ivServiceCdnArrow"
+                                        android:layout_width="14dp"
+                                        android:layout_height="14dp"
+                                        android:layout_marginStart="6dp"
+                                        app:srcCompat="@drawable/ic_chevron_right"
+                                        app:tint="@color/status_safe_text"
+                                        android:visibility="gone" />
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/tvServiceCdnHint"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="Нажмите на плашку CDN выше, чтобы открыть список доменов этой CDN-сети"
+                                    android:textColor="@color/accent_cyan"
+                                    android:textSize="11sp"
+                                    android:visibility="gone" />
+
+                                <ProgressBar
+                                    android:id="@+id/progressServiceCdnCheck"
+                                    style="?android:attr/progressBarStyleHorizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="4dp"
+                                    android:layout_marginTop="8dp"
+                                    android:indeterminate="true"
+                                    android:visibility="gone" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Routing Rules Card (Geosite & GeoIP Tags) -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardServiceRoutingRules"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            app:cardBackgroundColor="@color/surface"
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/divider"
+                            app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:letterSpacing="0.06"
+                                        android:text="ПРАВИЛА МАРШРУТИЗАЦИИ (ROUTING TAGS)"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+
+                                    <ImageView
+                                        android:id="@+id/btnHelpRoutingRules"
+                                        android:layout_width="22dp"
+                                        android:layout_height="22dp"
+                                        android:clickable="true"
+                                        android:contentDescription="Справка"
+                                        android:focusable="true"
+                                        android:padding="2dp"
+                                        app:srcCompat="@drawable/ic_help_circle"
+                                        app:tint="@color/on_surface_variant" />
+                                </LinearLayout>
+
+                                <!-- Geosite Tags Section -->
+                                <LinearLayout
+                                    android:id="@+id/layoutGeositeSection"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="12dp"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/tvGeositeHeader"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Теги Geosite (Доменные списки):"
+                                        android:textColor="@color/on_surface"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                    <LinearLayout
+                                        android:id="@+id/containerGeositesVisible"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:orientation="vertical" />
+
+                                    <LinearLayout
+                                        android:id="@+id/containerGeositesCollapsed"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="vertical"
+                                        android:visibility="gone" />
+
+                                    <TextView
+                                        android:id="@+id/btnToggleGeosites"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="2dp"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingVertical="4dp"
+                                        android:text="Показать все (▼)"
+                                        android:textColor="@color/accent_cyan"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:visibility="gone" />
+                                </LinearLayout>
+
+                                <!-- GeoIP Tags Section -->
+                                <LinearLayout
+                                    android:id="@+id/layoutGeoipSection"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="12dp"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/tvGeoipHeader"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Теги GeoIP (Диапазоны IP-адресов):"
+                                        android:textColor="@color/on_surface"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                    <LinearLayout
+                                        android:id="@+id/containerGeoipsVisible"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:orientation="vertical" />
+
+                                    <LinearLayout
+                                        android:id="@+id/containerGeoipsCollapsed"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="vertical"
+                                        android:visibility="gone" />
+
+                                    <TextView
+                                        android:id="@+id/btnToggleGeoips"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="2dp"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:paddingVertical="4dp"
+                                        android:text="Показать все (▼)"
+                                        android:textColor="@color/accent_cyan"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:visibility="gone" />
+                                </LinearLayout>
+
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Domains Column Window Card with Copy Icon -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            app:cardBackgroundColor="@color/surface"
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/divider"
+                            app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp">
+
+                                <!-- Header with Domain Count & Top-Right Copy Icon Pod -->
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:id="@+id/tvServiceDomainCount"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:letterSpacing="0.06"
+                                        android:text="СПИСОК ДОМЕНОВ СЕРВИСА"
+                                        android:textColor="@color/on_surface_variant"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+
+                                    <ImageView
+                                        android:id="@+id/btnHelpDomainsList"
+                                        android:layout_width="22dp"
+                                        android:layout_height="22dp"
+                                        android:layout_marginEnd="8dp"
+                                        android:clickable="true"
+                                        android:contentDescription="Справка"
+                                        android:focusable="true"
+                                        android:padding="2dp"
+                                        app:srcCompat="@drawable/ic_help_circle"
+                                        app:tint="@color/on_surface_variant" />
+
+                                    <!-- Copy Icon Pod Button -->
+                                    <FrameLayout
+                                        android:id="@+id/btnCopyServiceDomains"
+                                        android:layout_width="38dp"
+                                        android:layout_height="38dp"
+                                        android:background="@drawable/bg_icon_pod"
+                                        android:clickable="true"
+                                        android:contentDescription="Скопировать все домены в буфер"
+                                        android:focusable="true">
+
+                                        <ImageView
+                                            android:layout_width="18dp"
+                                            android:layout_height="18dp"
+                                            android:layout_gravity="center"
+                                            app:srcCompat="@drawable/ic_copy"
+                                            app:tint="@color/accent_cyan" />
+                                    </FrameLayout>
+                                </LinearLayout>
+
+                                <!-- Scrollable Column Window with smooth nested RecyclerView -->
+                                <FrameLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="320dp"
+                                    android:layout_marginTop="12dp"
+                                    android:background="@drawable/bg_tab_inactive"
+                                    android:padding="8dp">
+
+                                    <androidx.recyclerview.widget.RecyclerView
+                                        android:id="@+id/rvServiceDomains"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:clipToPadding="false"
+                                        android:nestedScrollingEnabled="true"
+                                        android:scrollbars="vertical" />
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="Прокручивайте список для просмотра всех доменов. Нажмите на значок в углу для копирования."
+                                    android:textColor="@color/on_surface_variant"
+                                    android:textSize="11sp" />
+
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- Floating Bottom Navigation Capsule Bar (Matching the exact design of reference screenshot) -->
+    <LinearLayout
+        android:id="@+id/bottomNavCapsule"
+        android:layout_width="260dp"
+        android:layout_height="58dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/bg_bottom_nav_capsule"
+        android:elevation="12dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp">
+
+        <!-- Nav Item 1: DNS Leak -->
+        <FrameLayout
+            android:id="@+id/navDnsLeak"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Утечка DNS"
+            android:focusable="true">
+
+            <View
+                android:id="@+id/ivNavDnsBg"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_nav_active_circle" />
+
+            <ImageView
+                android:id="@+id/ivNavDnsIcon"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                app:srcCompat="@drawable/ic_shield"
+                app:tint="@color/on_primary" />
+        </FrameLayout>
+
+        <!-- Nav Item 2: CDN Check -->
+        <FrameLayout
+            android:id="@+id/navCdn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Проверка CDN"
+            android:focusable="true">
+
+            <View
+                android:id="@+id/ivNavCdnBg"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:background="@android:color/transparent" />
+
+            <ImageView
+                android:id="@+id/ivNavCdnIcon"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                app:srcCompat="@drawable/ic_cloud_cdn"
+                app:tint="@color/on_surface_variant" />
+        </FrameLayout>
+
+        <!-- Nav Item 3: Service Domains -->
+        <FrameLayout
+            android:id="@+id/navServices"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Домены сервисов"
+            android:focusable="true">
+
+            <View
+                android:id="@+id/ivNavServicesBg"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:background="@android:color/transparent" />
+
+            <ImageView
+                android:id="@+id/ivNavServicesIcon"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                app:srcCompat="@drawable/ic_domain_list"
+                app:tint="@color/on_surface_variant" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

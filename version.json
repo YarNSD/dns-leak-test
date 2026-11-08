@@ -1,8 +1,8 @@
 {
-  "versionCode": 1,
-  "versionName": "1.0.0",
-  "apkUniversalUrl": "https://github.com/YarNSD/dns-leak-test/releases/download/v1.0.0/DnsLeakTest-universal.apk",
-  "apkArm64Url": "https://github.com/YarNSD/dns-leak-test/releases/download/v1.0.0/DnsLeakTest-arm64-v8a.apk",
-  "apkArmeabiUrl": "https://github.com/YarNSD/dns-leak-test/releases/download/v1.0.0/DnsLeakTest-armeabi-v7a.apk",
-  "changelog": "Релиз v1.0.0: поддержка архитектур arm64-v8a, armeabi-v7a и universal."
+  "versionCode": 2,
+  "versionName": "1.2.0",
+  "apkUniversalUrl": "https://github.com/YarNSD/dns-leak-test/releases/download/v1.2.0/DnsLeakTest.apk",
+  "apkArm64Url": "https://github.com/YarNSD/dns-leak-test/releases/download/v1.2.0/DnsLeakTest.apk",
+  "apkArmeabiUrl": "https://github.com/YarNSD/dns-leak-test/releases/download/v1.2.0/DnsLeakTest.apk",
+  "changelog": "Релиз v1.2.0:\n• Проверка CDN: детектор Cloudflare, Akamai, Fastly, CNAME-цепочки и Anycast ASN\n• Поиск доменов сервисов: база Loyalsoldier с автодополнением и полным списком доменов\n• Скачивание RuleSets: быстрый доступ к geosite.dat и geoip.dat\n• Справка: интерактивные подсказки во всех блоках приложения\n• Плавающее меню навигации внизу экрана\n• Единый универсальный APK для всех Android-устройств"
 }

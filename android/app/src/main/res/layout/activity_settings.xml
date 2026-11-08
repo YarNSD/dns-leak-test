@@ -10,7 +10,7 @@
         android:id="@+id/toolbarSettings"
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/surface"
+        android:background="@color/background"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -24,11 +24,12 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="16dp"
-        android:paddingTop="16dp"
+        android:paddingTop="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbarSettings">
 
+        <!-- Card: API Selection -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardSelectApi"
             android:layout_width="match_parent"
@@ -36,7 +37,7 @@
             android:clickable="true"
             android:focusable="true"
             app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="10dp"
+            app:cardCornerRadius="18dp"
             app:cardElevation="0dp"
             app:strokeColor="@color/divider"
             app:strokeWidth="1dp">
@@ -49,9 +50,23 @@
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="16dp">
 
+                <FrameLayout
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_icon_pod">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        app:srcCompat="@drawable/ic_shield"
+                        app:tint="@color/accent_cyan" />
+                </FrameLayout>
+
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -68,28 +83,29 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
-                        android:text="Активный: bash.ws"
+                        android:text="Активный: edns.ip-api.com"
                         android:textColor="@color/on_surface_variant"
                         android:textSize="13sp" />
                 </LinearLayout>
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_chevron_right"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    app:srcCompat="@drawable/ic_chevron_right"
                     app:tint="@color/on_surface_variant" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Card: App Updates -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardCheckUpdate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="12dp"
             android:clickable="true"
             android:focusable="true"
             app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="10dp"
+            app:cardCornerRadius="18dp"
             app:cardElevation="0dp"
             app:strokeColor="@color/divider"
             app:strokeWidth="1dp">
@@ -102,9 +118,23 @@
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="16dp">
 
+                <FrameLayout
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_icon_pod">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        app:srcCompat="@drawable/ic_globe"
+                        app:tint="@color/accent_cyan" />
+                </FrameLayout>
+
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -127,10 +157,105 @@
                 </LinearLayout>
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_chevron_right"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    app:srcCompat="@drawable/ic_chevron_right"
                     app:tint="@color/on_surface_variant" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card: Domain Database & Rules Source -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardDomainDatabase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="@color/surface"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/divider"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_icon_pod">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            app:srcCompat="@drawable/ic_domain_list"
+                            app:tint="@color/accent_cyan" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="База доменов и правил"
+                            android:textColor="@color/on_surface"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:text="Loyalsoldier / v2ray-rules-dat"
+                            android:textColor="@color/accent_cyan"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="Списки доменов сервисов, классификация CDN и теги маршрутизации (geosite / geoip) сформированы на основе открытого репозитория сообщества Loyalsoldier/v2ray-rules-dat (upstream: v2fly/domain-list-community). База регулярно поддерживается для точной маршрутизации и обхода ограничений."
+                    android:textColor="@color/on_surface_variant"
+                    android:textSize="12sp" />
+
+                <!-- Action Button to Open GitHub Repository -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenDomainRepo"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="14dp"
+                    android:backgroundTint="@color/surface_variant"
+                    android:letterSpacing="0.04"
+                    android:text="Открыть репозиторий на GitHub"
+                    android:textAllCaps="false"
+                    android:textColor="@color/on_surface"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_globe"
+                    app:iconGravity="textStart"
+                    app:iconSize="16dp"
+                    app:iconTint="@color/accent_cyan"
+                    app:strokeColor="@color/divider"
+                    app:strokeWidth="1dp" />
+
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

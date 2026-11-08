@@ -3,6 +3,7 @@ package com.dnsleak.test
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -70,6 +71,18 @@ class SettingsActivity : AppCompatActivity() {
         binding.cardCheckUpdate.setOnClickListener {
             checkUpdateManually()
         }
+
+        val domainRepoUrl = "https://github.com/Loyalsoldier/v2ray-rules-dat"
+        val openDomainRepo = {
+            try {
+                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(domainRepoUrl))
+                startActivity(browserIntent)
+            } catch (_: Exception) {
+                Toast.makeText(this, "Не удалось открыть браузер", Toast.LENGTH_SHORT).show()
+            }
+        }
+        binding.btnOpenDomainRepo.setOnClickListener { openDomainRepo() }
+        binding.cardDomainDatabase.setOnClickListener { openDomainRepo() }
     }
 
     private fun updateActiveApiText() {

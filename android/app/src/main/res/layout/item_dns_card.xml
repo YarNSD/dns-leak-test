@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="6dp"
+    android:layout_marginBottom="8dp"
     app:cardBackgroundColor="@color/surface"
-    app:cardCornerRadius="8dp"
+    app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
     app:strokeColor="@color/divider"
     app:strokeWidth="1dp">
@@ -15,10 +15,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="9dp">
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="12dp">
 
-        <!-- Top Row: IP Address & Country -->
+        <!-- Top Row: IP Address & Country Badge -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -31,8 +31,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="monospace"
-                android:textColor="@color/on_surface"
-                android:textSize="14sp"
+                android:textColor="@color/accent_cyan"
+                android:textSize="15sp"
                 android:textStyle="bold"
                 tools:text="104.22.220.71" />
 
@@ -41,21 +41,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/badge_neutral_bg"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="2dp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
                 android:textColor="@color/on_surface_variant"
-                android:textSize="11sp"
-                tools:text="Sweden (se)" />
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="Sweden (SE)" />
         </LinearLayout>
 
-        <!-- ISP / Provider Name -->
+        <!-- Provider / ISP & ASN info -->
         <TextView
             android:id="@+id/tvDnsIsp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="3dp"
-            android:textColor="@color/on_surface_variant"
-            android:textSize="12sp"
-            tools:text="AS13335 Cloudflare Inc" />
+            android:textColor="@color/on_surface"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            tools:text="Cloudflare, Inc. (AS13335)" />
+
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
