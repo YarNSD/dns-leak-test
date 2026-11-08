@@ -17,10 +17,12 @@ Accurately detects whether DNS queries are hijacked by Russian ISPs (Rostelecom,
    - Floating capsule bottom navigation bar (`#151C28` pill with active cyan `#38BDF8` pod) switching between 3 core tools:
      1. **Утечка DNS**: Full leak test, active interface detection, Private DNS status, DoH/DoT detection.
      2. **Проверка CDN**: CNAME chain resolution, reverse CDN IP ASN classification (Cloudflare, Akamai, Fastly, GCore, etc.).
-     3. **Домены сервисов**: Instant autocomplete search across 50+ services from `v2fly/domain-list-community`, interactive CDN badges, scrollable domain column, one-tap copy.
+     3. **Домены сервисов**: Instant autocomplete search across services from Loyalsoldier database, interactive CDN badges, scrollable domain column, one-tap copy.
+   - Single universal APK architecture ensuring 100% compatibility across all Android devices.
+   - Contextual educational help dialogs ("ликбез простым языком") on question mark icons across all blocks.
+   - RuleSets download section for Loyalsoldier `geosite.dat` & `geoip.dat` with routing tags copying.
    - Built-in latency ping tester for all 9 APIs to identify blocked endpoints.
-   - ABI splits (`arm64-v8a`, `armeabi-v7a`, `universal`).
 
 3. **CI/CD & Releases**:
-   - Automated GitHub releases with ABI split APKs.
+   - GitHub Releases (`v1.0.0` and latest `v1.2.0`).
    - `version.json` in repository for in-app OTA update checks.
