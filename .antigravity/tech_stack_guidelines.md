@@ -36,3 +36,12 @@
   2. Passed `R.id.tvSuggestionText` to `ArrayAdapter` super constructor and overrode `getDropDownView()`.
   3. Removed ABI splits, generating a clean universal APK `app-debug.apk` / `DnsLeakTest.apk`.
   4. Wrapped `onCreate` in a safety handler to render a diagnostics screen on any startup issue instead of a silent crash.
+
+### 5. Missing Country Flag Emojis in DNS Resolvers List
+- **Symptoms**: DNS servers in `rvDnsServers` displayed without country flags or with empty/broken badges.
+- **Root Cause**: Primary provider `edns.ip-api.com` returns combined `"geo": "Sweden - Cloudflare, Inc."` rather than separate `country` / `country_code` JSON fields, leaving country and countryCode blank. Additionally, earlier implementation only had ~19 hardcoded countries.
+- **Resolution**:
+  1. Created `CountryUtils.kt` with full ISO-3166 system Locale mappings (~249 countries), Russian/English aliases, and mathematical Regional Indicator Unicode flag conversion (`0x1F1E6 + (char - 'A')`).
+  2. Added `parseGeoString` to parse combined geo strings into country and ISP.
+  3. Added client IP geolocation fallback in `DnsLeakTester` when client info is omitted by provider.
+  4. Updated `DnsCardAdapter` and `MainActivity` to format country flags consistently.

@@ -42,6 +42,7 @@ import com.dnsleak.test.service.ServiceSuggestion
 import com.dnsleak.test.ui.DnsCardAdapter
 import com.dnsleak.test.ui.ServiceAutoCompleteAdapter
 import com.dnsleak.test.ui.ServiceDomainAdapter
+import com.dnsleak.test.util.CountryUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
@@ -855,7 +856,9 @@ class MainActivity : AppCompatActivity() {
     private fun renderResults(result: DnsLeakResult) {
         binding.tvClientIp.text = "IP-адрес: ${result.clientIp}"
         binding.tvClientIsp.text = "Провайдер: ${result.clientIsp}"
-        binding.tvClientLocation.text = "Локация: ${result.clientCountry}"
+        val clientFlag = CountryUtils.getCountryFlag(result.clientCountry)
+        val clientFlagPrefix = if (clientFlag.isNotBlank()) "$clientFlag " else ""
+        binding.tvClientLocation.text = "Локация: $clientFlagPrefix${result.clientCountry}"
 
         val vpnSuffix = if (result.localDnsInfo.isVpnActive) " | VPN: Активен (${result.localDnsInfo.interfaceName ?: "VPN"})" else ""
         binding.tvClientVpnStatus.text = "Тип сети: ${result.localDnsInfo.getNetworkTypeName()}$vpnSuffix"

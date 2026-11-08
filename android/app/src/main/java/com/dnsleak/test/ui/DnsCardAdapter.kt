@@ -2,9 +2,12 @@ package com.dnsleak.test.ui
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.dnsleak.test.R
 import com.dnsleak.test.databinding.ItemDnsCardBinding
 import com.dnsleak.test.model.DnsServerItem
+import com.dnsleak.test.util.CountryUtils
 
 class DnsCardAdapter(private var items: List<DnsServerItem> = emptyList()) :
     RecyclerView.Adapter<DnsCardAdapter.DnsViewHolder>() {
@@ -30,53 +33,52 @@ class DnsCardAdapter(private var items: List<DnsServerItem> = emptyList()) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: DnsServerItem) {
+            val context = binding.root.context
             binding.tvDnsIp.text = item.ip
 
-            val flag = getCountryFlagEmoji(item.countryCode, item.country)
-            val countryCodeSuffix = if (item.countryCode.isNotBlank()) " (${item.countryCode.lowercase()})" else ""
+            // 1. Resolve country and flag
+            val rawCountry = item.country.trim()
+            val rawCode = item.countryCode.trim()
+
+            val resolvedCountry = when {
+                rawCountry.isNotBlank() -> rawCountry
+                rawCode.isNotBlank() -> rawCode
+                item.isp.contains(" - ") -> CountryUtils.parseGeoString(item.isp).first
+                else -> ""
+            }
+
+            val code = if (rawCode.length == 2) rawCode.uppercase() else CountryUtils.getCountryCode(resolvedCountry)
+            val flag = CountryUtils.countryCodeToEmoji(code)
+
+            val displayCountry = resolvedCountry.ifBlank {
+                if (code.isNotBlank()) code else "DNS Server"
+            }
+            val codeSuffix = if (code.isNotBlank() && !displayCountry.equals(code, ignoreCase = true)) " ($code)" else ""
+
             val countryText = if (flag.isNotEmpty()) {
-                "$flag ${item.country}$countryCodeSuffix"
+                "$flag $displayCountry$codeSuffix"
             } else {
-                "${item.country}$countryCodeSuffix"
+                "$displayCountry$codeSuffix"
             }
 
             binding.tvDnsCountry.text = countryText
-            binding.tvDnsIsp.text = item.isp
-        }
 
-        private fun getCountryFlagEmoji(code: String?, countryName: String?): String {
-            if (!code.isNullOrBlank() && code.trim().length == 2) {
-                val upper = code.trim().uppercase()
-                if (upper[0] in 'A'..'Z' && upper[1] in 'A'..'Z') {
-                    val first = Character.toChars(0x1F1E6 + (upper[0] - 'A'))
-                    val second = Character.toChars(0x1F1E6 + (upper[1] - 'A'))
-                    return String(first) + String(second)
-                }
+            // Style badge based on leak status
+            if (item.isLeak) {
+                binding.tvDnsCountry.setBackgroundResource(R.drawable.badge_leak_bg)
+                binding.tvDnsCountry.setTextColor(ContextCompat.getColor(context, R.color.status_leak_text))
+            } else {
+                binding.tvDnsCountry.setBackgroundResource(R.drawable.badge_safe_bg)
+                binding.tvDnsCountry.setTextColor(ContextCompat.getColor(context, R.color.status_safe_text))
             }
 
-            val lower = countryName?.lowercase() ?: ""
-            return when {
-                lower.contains("russia") || lower.contains("россия") -> "🇷🇺"
-                lower.contains("sweden") || lower.contains("швеция") -> "🇸🇪"
-                lower.contains("germany") || lower.contains("германия") -> "🇩🇪"
-                lower.contains("netherlands") || lower.contains("нидерланды") -> "🇳🇱"
-                lower.contains("united states") || lower.contains("usa") || lower.contains("сша") -> "🇺🇸"
-                lower.contains("finland") || lower.contains("финляндия") -> "🇫🇮"
-                lower.contains("france") || lower.contains("франция") -> "🇫🇷"
-                lower.contains("united kingdom") || lower.contains("великобритания") -> "🇬🇧"
-                lower.contains("switzerland") || lower.contains("швейцария") -> "🇨🇭"
-                lower.contains("austria") || lower.contains("австрия") -> "🇦🇹"
-                lower.contains("poland") || lower.contains("польша") -> "🇵🇱"
-                lower.contains("estonia") || lower.contains("эстония") -> "🇪🇪"
-                lower.contains("latvia") || lower.contains("латвия") -> "🇱🇻"
-                lower.contains("lithuania") || lower.contains("литва") -> "🇱🇹"
-                lower.contains("canada") || lower.contains("канада") -> "🇨🇦"
-                lower.contains("japan") || lower.contains("япония") -> "🇯🇵"
-                lower.contains("singapore") || lower.contains("сингапур") -> "🇸🇬"
-                lower.contains("turkey") || lower.contains("турция") -> "🇹🇷"
-                lower.contains("kazakhstan") || lower.contains("казахстан") -> "🇰🇿"
-                else -> ""
+            // 2. Resolve ISP line
+            val resolvedIsp = if (item.isp.contains(" - ") && item.country.isBlank()) {
+                CountryUtils.parseGeoString(item.isp).second.ifBlank { item.isp }
+            } else {
+                item.isp.ifBlank { "DNS Resolver" }
             }
+            binding.tvDnsIsp.text = resolvedIsp
         }
     }
 }

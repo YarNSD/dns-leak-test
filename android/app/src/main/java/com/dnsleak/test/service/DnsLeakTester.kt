@@ -5,6 +5,7 @@ import com.dnsleak.test.model.DnsLeakResult
 import com.dnsleak.test.model.DnsProvider
 import com.dnsleak.test.model.DnsServerItem
 import com.dnsleak.test.model.LocalDnsInfo
+import com.dnsleak.test.util.CountryUtils
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -75,17 +76,42 @@ class DnsLeakTester(private val context: Context) {
         val obj = gson.fromJson(response, JsonObject::class.java)
 
         val clientObj = obj.getAsJsonObject("client")
-        val clientIp = clientObj?.get("ip")?.asString ?: "Неизвестно"
-        val clientIsp = clientObj?.get("isp")?.asString ?: "Неизвестно"
-        val clientCountry = clientObj?.get("country")?.asString ?: "Неизвестно"
+        var clientIp = clientObj?.get("ip")?.asString ?: ""
+        var clientIsp = clientObj?.get("isp")?.asString ?: ""
+        var clientCountry = clientObj?.get("country")?.asString ?: ""
+
+        if (clientIp.isBlank() || clientIp == "Неизвестно") {
+            try {
+                val ipInfoResp = httpGet("http://ip-api.com/json/?fields=status,country,countryCode,isp,query")
+                val ipObj = gson.fromJson(ipInfoResp, JsonObject::class.java)
+                if (ipObj.get("status")?.asString == "success") {
+                    clientIp = ipObj.get("query")?.asString ?: "Неизвестно"
+                    clientIsp = ipObj.get("isp")?.asString ?: "Неизвестно"
+                    clientCountry = ipObj.get("country")?.asString ?: "Неизвестно"
+                }
+            } catch (_: Exception) { }
+        }
+        if (clientIp.isBlank()) clientIp = "Неизвестно"
+        if (clientIsp.isBlank()) clientIsp = "Неизвестно"
+        if (clientCountry.isBlank()) clientCountry = "Неизвестно"
 
         val dnsObj = obj.getAsJsonObject("dns")
         val dnsItems = mutableListOf<DnsServerItem>()
 
         if (dnsObj != null) {
             val ip = dnsObj.get("ip")?.asString ?: ""
-            val isp = dnsObj.get("isp")?.asString ?: dnsObj.get("geo")?.asString ?: ""
-            val country = dnsObj.get("country")?.asString ?: ""
+            val rawGeo = dnsObj.get("geo")?.asString ?: ""
+            var country = dnsObj.get("country")?.asString ?: ""
+            var isp = dnsObj.get("isp")?.asString ?: ""
+
+            if (rawGeo.isNotBlank()) {
+                val parsed = CountryUtils.parseGeoString(rawGeo)
+                if (country.isBlank()) country = parsed.first
+                if (isp.isBlank()) isp = parsed.second.ifBlank { rawGeo }
+            }
+            if (isp.isBlank()) isp = rawGeo.ifBlank { "DNS Resolver" }
+
+            val countryCode = CountryUtils.getCountryCode(country)
             val source = determineDnsSource(ip, localDns)
             val analysis = evaluateDnsServer(isp, country, clientIsp, clientCountry, localDns)
 
@@ -94,7 +120,7 @@ class DnsLeakTester(private val context: Context) {
                     ip = ip,
                     isp = isp,
                     country = country,
-                    countryCode = "",
+                    countryCode = countryCode,
                     sourceAttribution = source,
                     isIspDns = analysis.isIspDns,
                     isLeak = analysis.isLeak,
@@ -193,12 +219,13 @@ class DnsLeakTester(private val context: Context) {
                 val source = determineDnsSource(ip, localDns)
                 val analysis = evaluateDnsServer(isp, country, clientIsp, clientCountry, localDns)
 
+                val countryCode = CountryUtils.getCountryCode(country)
                 dnsItems.add(
                     DnsServerItem(
                         ip = ip,
                         isp = isp,
                         country = country,
-                        countryCode = "",
+                        countryCode = countryCode,
                         sourceAttribution = source,
                         isIspDns = analysis.isIspDns,
                         isLeak = analysis.isLeak,
@@ -252,12 +279,13 @@ class DnsLeakTester(private val context: Context) {
 
         val analysis = evaluateDnsServer(clientIsp, clientCountry, clientIsp, clientCountry, localDns)
 
+        val adgCountryCode = CountryUtils.getCountryCode(clientCountry)
         dnsItems.add(
             DnsServerItem(
                 ip = clientIp,
                 isp = if (isFiltered) "AdGuard Protected Resolver" else clientIsp,
                 country = clientCountry,
-                countryCode = "",
+                countryCode = adgCountryCode,
                 sourceAttribution = source,
                 isIspDns = analysis.isIspDns,
                 isLeak = analysis.isLeak,
