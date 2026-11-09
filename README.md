@@ -56,9 +56,7 @@
 
 ### Android
 
-Скачайте универсальный APK со страницы **[Релизов](https://github.com/YarNSD/dns-leak-test/releases/latest)**:
-- **`DnsLeakTest.apk`** (или `DnsLeakTest-universal.apk`) — единый установочный пакет под любые процессоры и устройства.
-
+Скачайте универсальный APK со страницы релизов.
 Минимальная версия: Android 5.0 (Lollipop) и новее.
 
 ### Windows (PowerShell)
