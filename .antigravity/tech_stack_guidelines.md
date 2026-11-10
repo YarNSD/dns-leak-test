@@ -45,3 +45,14 @@
   2. Added `parseGeoString` to parse combined geo strings into country and ISP.
   3. Added client IP geolocation fallback in `DnsLeakTester` when client info is omitted by provider.
   4. Updated `DnsCardAdapter` and `MainActivity` to format country flags consistently.
+
+### 6. Router DNS & Russian DNS Warning Classification
+- **Symptoms**: When phone connected via Wi-Fi without Private DNS or VPN, queries resolved via local router (192.168.x.x) and upstream Russian resolvers (e.g. MSK-IX). The status card incorrectly showed green "DNS интернет-провайдера не используется" because the resolver name didn't match the client ISP name.
+- **Root Cause**: Wi-Fi router resolution without Private DNS was not distinguished from secure external DoH/DoT resolvers, and Russian DNS resolvers without explicit ISP name match were treated as safe external resolvers.
+- **Resolution**:
+  1. Added yellow warning state (`status_warning_bg` `#362810` / `status_warning_text` `#FBBF24`, `badge_warning_bg.xml`).
+  2. Implemented `CountryUtils.isRussian(...)` detection across countries, ISO codes, and Russian transit/IX networks (MSK-IX, NetByNet, Rostelecom, etc.).
+  3. When on Wi-Fi without Private DNS, verdict card shows yellow "Используется DNS роутера (Wi-Fi)" with a clear warning: "Обратите внимание: используется российский DNS, а значит ваши запросы могут быть в опасности (перехват, слежка и блокировки провайдером). Рекомендуется включить частный DNS на телефоне."
+  4. On cellular without Private DNS, verdict card shows red if resolving through provider or Russian DNS.
+  5. When Private DNS is configured or secure VPN is active, verdict card remains green.
+  6. When on Wi-Fi without Private DNS, but discovered resolvers are non-Russian (foreign), verdict card switches to green "DNS через роутер (Условно безопасно)" with explanation that foreign non-provider DNS is configured on the router.

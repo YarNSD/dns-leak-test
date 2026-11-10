@@ -8,5 +8,6 @@ data class DnsServerItem(
     val sourceAttribution: String,
     val isIspDns: Boolean,
     val isLeak: Boolean,
-    val statusText: String
+    val statusText: String,
+    val isWarning: Boolean = false
 )

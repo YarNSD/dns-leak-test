@@ -798,7 +798,10 @@ class MainActivity : AppCompatActivity() {
         binding.btnHelpDnsStatus.setOnClickListener {
             showHelpDialog(
                 title = "Статус защиты DNS",
-                description = "Показывает, защищены ли ваши DNS-запросы от перехвата и слежки.\n\n• Если вы используете VPN или шифрованный DNS (DoH/DoT), запросы должны обрабатываться строго доверенными серверами.\n• Если во время проверки обнаружены посторонние серверы вашего интернет-провайдера, происходит «утечка DNS» — провайдер видит, какие сайты вы открываете."
+                description = "Показывает, защищены ли ваши DNS-запросы от перехвата и слежки.\n\n" +
+                        "• Зеленый статус: активен частный шифрованный DNS (DoH/DoT) на телефоне, защищенный VPN, либо на роутере настроены зарубежные непровайдерские серверы (условно безопасно).\n" +
+                        "• Желтый статус: подключение через Wi-Fi роутер с российским DNS без шифрования. Запросы могут перехватываться провайдером.\n" +
+                        "• Красный статус: утечка или прямое использование DNS провайдера/мобильного оператора. Ваши запросы перехватываются оператором связи."
             )
         }
 
@@ -868,38 +871,164 @@ class MainActivity : AppCompatActivity() {
 
         binding.tvDnsListHeader.text = "ОБНАРУЖЕННЫЕ DNS-РЕЗОЛВЕРЫ (${result.servers.size})"
 
-        if (result.servers.isEmpty()) {
-            binding.tvVerdict.text = "Серверы не найдены"
-            binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.on_surface))
-            binding.tvVerdictDescription.text = result.clientIsp
-            binding.cardStatus.setCardBackgroundColor(
-                ContextCompat.getColor(this, R.color.surface)
-            )
-            binding.cardStatus.strokeColor =
-                ContextCompat.getColor(this, R.color.divider)
-            binding.tvEmptyList.visibility = View.VISIBLE
-        } else if (result.isOverallLeak) {
-            binding.tvVerdict.text = "Используется DNS интернет-провайдера"
-            binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_leak_text))
-            binding.tvVerdictDescription.text =
-                "Зафиксировано использование DNS-серверов интернет-провайдера. Ваши запросы перехватываются оператором связи."
-            binding.cardStatus.setCardBackgroundColor(
-                ContextCompat.getColor(this, R.color.status_leak_bg)
-            )
-            binding.cardStatus.strokeColor =
-                ContextCompat.getColor(this, R.color.status_leak_text)
-            binding.tvEmptyList.visibility = View.GONE
-        } else {
-            binding.tvVerdict.text = "DNS интернет-провайдера не используется"
-            binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_safe_text))
-            binding.tvVerdictDescription.text =
-                "Все DNS-запросы направляются через защищенные внешние серверы."
-            binding.cardStatus.setCardBackgroundColor(
-                ContextCompat.getColor(this, R.color.status_safe_bg)
-            )
-            binding.cardStatus.strokeColor =
-                ContextCompat.getColor(this, R.color.status_safe_text)
-            binding.tvEmptyList.visibility = View.GONE
+        val hasRussianDns = result.servers.any { CountryUtils.isRussian(it.country, it.isp) || it.countryCode.equals("RU", ignoreCase = true) }
+        val hasPrivateDns = result.localDnsInfo.hasActivePrivateDns() || result.localDnsInfo.privateDnsMode == "opportunistic"
+        val isWifi = result.localDnsInfo.isWifi
+        val isCellular = result.localDnsInfo.isCellular
+        val isVpn = result.localDnsInfo.isVpnActive
+
+        val gatewayText = result.localDnsInfo.gatewayIp?.let { " ($it)" } ?: ""
+
+        when {
+            result.servers.isEmpty() -> {
+                binding.tvVerdict.text = "Серверы не найдены"
+                binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.on_surface))
+                binding.tvVerdictDescription.text = result.clientIsp
+                binding.cardStatus.setCardBackgroundColor(
+                    ContextCompat.getColor(this, R.color.surface)
+                )
+                binding.cardStatus.strokeColor =
+                    ContextCompat.getColor(this, R.color.divider)
+                binding.tvEmptyList.visibility = View.VISIBLE
+            }
+
+            // 1. Private DNS is configured and active -> GREEN
+            hasPrivateDns -> {
+                binding.tvVerdict.text = "DNS интернет-провайдера не используется"
+                binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_safe_text))
+                val privateDnsName = result.localDnsInfo.privateDnsHostname ?: "DoT"
+                binding.tvVerdictDescription.text =
+                    "Все DNS-запросы зашифрованы и направляются через частный DNS ($privateDnsName) в обход роутера и провайдера."
+                binding.cardStatus.setCardBackgroundColor(
+                    ContextCompat.getColor(this, R.color.status_safe_bg)
+                )
+                binding.cardStatus.strokeColor =
+                    ContextCompat.getColor(this, R.color.status_safe_text)
+                binding.tvEmptyList.visibility = View.GONE
+            }
+
+            // 2. Wi-Fi router (no private DNS, no VPN)
+            isWifi && !isVpn -> {
+                if (hasRussianDns) {
+                    // Russian DNS on router -> YELLOW Warning
+                    binding.tvVerdict.text = "Используется DNS роутера (Wi-Fi)"
+                    binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_warning_text))
+                    val warningText =
+                        "DNS-запросы отправляются на роутер$gatewayText. Обратите внимание: используется российский DNS, а значит ваши запросы могут быть в опасности (перехват, слежка и блокировки провайдером). Рекомендуется включить частный DNS на телефоне."
+                    binding.tvVerdictDescription.text = warningText
+                    binding.cardStatus.setCardBackgroundColor(
+                        ContextCompat.getColor(this, R.color.status_warning_bg)
+                    )
+                    binding.cardStatus.strokeColor =
+                        ContextCompat.getColor(this, R.color.status_warning_text)
+                } else {
+                    // Non-Russian DNS on router -> GREEN Conditionally Safe
+                    binding.tvVerdict.text = "DNS через роутер (Условно безопасно)"
+                    binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_safe_text))
+                    val foreignIsp = result.servers.firstOrNull()?.isp ?: "внешние серверы"
+                    val foreignCountry = result.servers.firstOrNull()?.let {
+                        val flag = CountryUtils.getCountryFlag(it.countryCode.ifBlank { it.country })
+                        if (flag.isNotBlank()) "$flag ${it.country}" else it.country
+                    } ?: "зарубежные"
+                    val safeRouterText =
+                        "Резолв выполняется через роутер$gatewayText, но на роутере используются не провайдерские DNS. Обнаружены зарубежные резолверы ($foreignIsp, $foreignCountry). Подключение условно безопасно."
+                    binding.tvVerdictDescription.text = safeRouterText
+                    binding.cardStatus.setCardBackgroundColor(
+                        ContextCompat.getColor(this, R.color.status_safe_bg)
+                    )
+                    binding.cardStatus.strokeColor =
+                        ContextCompat.getColor(this, R.color.status_safe_text)
+                }
+                binding.tvEmptyList.visibility = View.GONE
+            }
+
+            // 3. Cellular network without private DNS -> RED if leak or Russian DNS
+            isCellular && !isVpn -> {
+                if (result.isOverallLeak || hasRussianDns || result.servers.any { it.isIspDns }) {
+                    binding.tvVerdict.text = "Используется DNS интернет-провайдера"
+                    binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_leak_text))
+                    val descText = if (hasRussianDns) {
+                        "Зафиксировано использование DNS оператора связи. Обратите внимание: используется российский DNS, а значит ваши запросы могут быть в опасности (перехват и блокировки оператором связи)."
+                    } else {
+                        "Зафиксировано использование DNS-серверов интернет-провайдера. Ваши запросы перехватываются оператором связи."
+                    }
+                    binding.tvVerdictDescription.text = descText
+                    binding.cardStatus.setCardBackgroundColor(
+                        ContextCompat.getColor(this, R.color.status_leak_bg)
+                    )
+                    binding.cardStatus.strokeColor =
+                        ContextCompat.getColor(this, R.color.status_leak_text)
+                } else {
+                    binding.tvVerdict.text = "DNS интернет-провайдера не используется"
+                    binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_safe_text))
+                    binding.tvVerdictDescription.text = "Все DNS-запросы направляются через защищенные внешние серверы."
+                    binding.cardStatus.setCardBackgroundColor(
+                        ContextCompat.getColor(this, R.color.status_safe_bg)
+                    )
+                    binding.cardStatus.strokeColor =
+                        ContextCompat.getColor(this, R.color.status_safe_text)
+                }
+                binding.tvEmptyList.visibility = View.GONE
+            }
+
+            // 4. VPN connection
+            isVpn -> {
+                if (result.isOverallLeak || (hasRussianDns && !result.clientCountry.equals("Russia", ignoreCase = true))) {
+                    binding.tvVerdict.text = "Обнаружена утечка DNS через VPN"
+                    binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_leak_text))
+                    val leakMsg = if (hasRussianDns) {
+                        "DNS-запросы уходят мимо VPN-туннеля. Обратите внимание: используется российский DNS, а значит ваши запросы могут быть в опасности."
+                    } else {
+                        "Зафиксирована утечка DNS мимо VPN-туннеля. Ваши запросы обрабатываются незащищенными резолверами."
+                    }
+                    binding.tvVerdictDescription.text = leakMsg
+                    binding.cardStatus.setCardBackgroundColor(
+                        ContextCompat.getColor(this, R.color.status_leak_bg)
+                    )
+                    binding.cardStatus.strokeColor =
+                        ContextCompat.getColor(this, R.color.status_leak_text)
+                } else {
+                    binding.tvVerdict.text = "DNS интернет-провайдера не используется"
+                    binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_safe_text))
+                    binding.tvVerdictDescription.text = "Все DNS-запросы направляются через защищенный VPN-туннель."
+                    binding.cardStatus.setCardBackgroundColor(
+                        ContextCompat.getColor(this, R.color.status_safe_bg)
+                    )
+                    binding.cardStatus.strokeColor =
+                        ContextCompat.getColor(this, R.color.status_safe_text)
+                }
+                binding.tvEmptyList.visibility = View.GONE
+            }
+
+            // 5. Fallback general case
+            result.isOverallLeak || hasRussianDns -> {
+                binding.tvVerdict.text = "Используется DNS интернет-провайдера"
+                binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_leak_text))
+                val fallbackMsg = if (hasRussianDns) {
+                    "Зафиксировано использование DNS провайдера. Обратите внимание: используется российский DNS, а значит ваши запросы могут быть в опасности."
+                } else {
+                    "Зафиксировано использование DNS-серверов интернет-провайдера. Ваши запросы перехватываются оператором связи."
+                }
+                binding.tvVerdictDescription.text = fallbackMsg
+                binding.cardStatus.setCardBackgroundColor(
+                    ContextCompat.getColor(this, R.color.status_leak_bg)
+                )
+                binding.cardStatus.strokeColor =
+                    ContextCompat.getColor(this, R.color.status_leak_text)
+                binding.tvEmptyList.visibility = View.GONE
+            }
+
+            else -> {
+                binding.tvVerdict.text = "DNS интернет-провайдера не используется"
+                binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_safe_text))
+                binding.tvVerdictDescription.text = "Все DNS-запросы направляются через защищенные внешние серверы."
+                binding.cardStatus.setCardBackgroundColor(
+                    ContextCompat.getColor(this, R.color.status_safe_bg)
+                )
+                binding.cardStatus.strokeColor =
+                    ContextCompat.getColor(this, R.color.status_safe_text)
+                binding.tvEmptyList.visibility = View.GONE
+            }
         }
 
         dnsAdapter.updateData(result.servers)

@@ -26,10 +26,11 @@ class DnsLeakTester(private val context: Context) {
     companion object {
         private val RU_ISP_KEYWORDS = listOf(
             "rostelecom", "ростелеком", "rtcomm", "mts", "мтс", "mobile telesystems",
-            "megafon", "мегафон", "netbynet", "vimpelcom", "вымпелком", "beeline", "билайн",
+            "megafon", "мегафон", "netbynet", "net by net", "vimpelcom", "вымпелком", "beeline", "билайн",
             "er-telecom", "эр-телеком", "dom.ru", "дом.ru", "transtelecom", "транстелеком", "ttk",
             "ufanet", "уфанет", "akado", "акадо", "comcor", "tattelecom", "таттелеком",
-            "mgts", "мгтс", "yota", "йота", "skartel", "скартел", "tele2", "теле2"
+            "mgts", "мгтс", "yota", "йота", "skartel", "скартел", "tele2", "теле2",
+            "msk-ix", "internet exchange", "yandex", "яндекс"
         )
 
         private val SECURE_DNS_KEYWORDS = listOf(
@@ -124,6 +125,7 @@ class DnsLeakTester(private val context: Context) {
                     sourceAttribution = source,
                     isIspDns = analysis.isIspDns,
                     isLeak = analysis.isLeak,
+                    isWarning = analysis.isWarning,
                     statusText = analysis.statusText
                 )
             )
@@ -175,6 +177,7 @@ class DnsLeakTester(private val context: Context) {
                         sourceAttribution = source,
                         isIspDns = analysis.isIspDns,
                         isLeak = analysis.isLeak,
+                        isWarning = analysis.isWarning,
                         statusText = analysis.statusText
                     )
                 )
@@ -229,6 +232,7 @@ class DnsLeakTester(private val context: Context) {
                         sourceAttribution = source,
                         isIspDns = analysis.isIspDns,
                         isLeak = analysis.isLeak,
+                        isWarning = analysis.isWarning,
                         statusText = analysis.statusText
                     )
                 )
@@ -289,6 +293,7 @@ class DnsLeakTester(private val context: Context) {
                 sourceAttribution = source,
                 isIspDns = analysis.isIspDns,
                 isLeak = analysis.isLeak,
+                isWarning = if (isFiltered) false else analysis.isWarning,
                 statusText = if (isFiltered) "БЕЗОПАСНО: DoH/DoT защита AdGuard" else analysis.statusText
             )
         )
@@ -343,6 +348,7 @@ class DnsLeakTester(private val context: Context) {
     private data class DnsEvaluation(
         val isIspDns: Boolean,
         val isLeak: Boolean,
+        val isWarning: Boolean,
         val statusText: String
     )
 
@@ -357,22 +363,51 @@ class DnsLeakTester(private val context: Context) {
         val lowerClientIsp = clientIsp.lowercase()
 
         val isSecureDns = SECURE_DNS_KEYWORDS.any { lowerDnsIsp.contains(it) }
-        val isKnownRuIsp = RU_ISP_KEYWORDS.any { lowerDnsIsp.contains(it) }
+        val isRussian = CountryUtils.isRussian(dnsCountry, dnsIsp)
+        val isKnownRuIsp = RU_ISP_KEYWORDS.any { lowerDnsIsp.contains(it) } || isRussian
         val matchesClientIsp = lowerClientIsp.isNotEmpty() &&
                 lowerClientIsp != "неизвестно" &&
                 (lowerDnsIsp.contains(lowerClientIsp) || lowerClientIsp.contains(lowerDnsIsp))
 
         val isIspDns = (isKnownRuIsp || matchesClientIsp) && !isSecureDns
+        val hasPrivateDns = localDns.hasActivePrivateDns() || localDns.privateDnsMode == "opportunistic"
 
-        val isLeak = if (localDns.isVpnActive) {
-            isIspDns || matchesClientIsp || (dnsCountry.equals("Russia", ignoreCase = true) && !clientCountry.equals("Russia", ignoreCase = true))
-        } else {
-            isIspDns
+        val isLeak: Boolean
+        val isWarning: Boolean
+
+        when {
+            // Case 1: VPN is active
+            localDns.isVpnActive -> {
+                isLeak = isIspDns || matchesClientIsp || (isRussian && !clientCountry.equals("Russia", ignoreCase = true))
+                isWarning = false
+            }
+            // Case 2: Private DNS is active
+            hasPrivateDns -> {
+                isLeak = isIspDns && !isSecureDns
+                isWarning = false
+            }
+            // Case 3: Wi-Fi network (queries go through router)
+            localDns.isWifi -> {
+                isLeak = false
+                isWarning = isRussian
+            }
+            // Case 4: Mobile network (cellular)
+            localDns.isCellular -> {
+                isLeak = isIspDns || isRussian
+                isWarning = false
+            }
+            // Case 5: Other
+            else -> {
+                isLeak = isIspDns || isRussian
+                isWarning = !isLeak && isRussian
+            }
         }
 
         val statusText = when {
-            isLeak && localDns.isVpnActive -> "УТЕЧКА: Используется DNS интернет-провайдера ($dnsIsp)"
-            isIspDns -> "ВНИМАНИЕ: Используется DNS интернет-провайдера ($dnsIsp)"
+            isLeak && localDns.isVpnActive -> "УТЕЧКА: DNS уходит мимо VPN ($dnsIsp)"
+            isLeak -> "ВНИМАНИЕ: Используется DNS интернет-провайдера ($dnsIsp)"
+            isWarning -> "ПРЕДУПРЕЖДЕНИЕ: Российский DNS на роутере ($dnsIsp)"
+            localDns.isWifi && !isRussian -> "БЕЗОПАСНО: Внешний DNS на роутере ($dnsIsp)"
             isSecureDns -> "БЕЗОПАСНО: DNS провайдера НЕ используется ($dnsIsp)"
             else -> "БЕЗОПАСНО: Внешний независимый резолвер ($dnsIsp)"
         }
@@ -380,6 +415,7 @@ class DnsLeakTester(private val context: Context) {
         return DnsEvaluation(
             isIspDns = isIspDns,
             isLeak = isLeak,
+            isWarning = isWarning,
             statusText = statusText
         )
     }

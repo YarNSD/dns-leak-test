@@ -18,6 +18,8 @@
     <color name="status_safe_text">#34D399</color>
     <color name="status_leak_bg">#3B1A22</color>
     <color name="status_leak_text">#F87171</color>
+    <color name="status_warning_bg">#362810</color>
+    <color name="status_warning_text">#FBBF24</color>
     <color name="status_info_bg">#15273C</color>
     <color name="status_info_text">#38BDF8</color>
 

@@ -63,13 +63,20 @@ class DnsCardAdapter(private var items: List<DnsServerItem> = emptyList()) :
 
             binding.tvDnsCountry.text = countryText
 
-            // Style badge based on leak status
-            if (item.isLeak) {
-                binding.tvDnsCountry.setBackgroundResource(R.drawable.badge_leak_bg)
-                binding.tvDnsCountry.setTextColor(ContextCompat.getColor(context, R.color.status_leak_text))
-            } else {
-                binding.tvDnsCountry.setBackgroundResource(R.drawable.badge_safe_bg)
-                binding.tvDnsCountry.setTextColor(ContextCompat.getColor(context, R.color.status_safe_text))
+            // Style badge based on leak / warning / safe status
+            when {
+                item.isLeak -> {
+                    binding.tvDnsCountry.setBackgroundResource(R.drawable.badge_leak_bg)
+                    binding.tvDnsCountry.setTextColor(ContextCompat.getColor(context, R.color.status_leak_text))
+                }
+                item.isWarning || item.isIspDns || CountryUtils.isRussian(resolvedCountry, item.isp) -> {
+                    binding.tvDnsCountry.setBackgroundResource(R.drawable.badge_warning_bg)
+                    binding.tvDnsCountry.setTextColor(ContextCompat.getColor(context, R.color.status_warning_text))
+                }
+                else -> {
+                    binding.tvDnsCountry.setBackgroundResource(R.drawable.badge_safe_bg)
+                    binding.tvDnsCountry.setTextColor(ContextCompat.getColor(context, R.color.status_safe_text))
+                }
             }
 
             // 2. Resolve ISP line

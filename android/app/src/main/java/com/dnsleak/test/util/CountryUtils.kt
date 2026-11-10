@@ -192,4 +192,29 @@ object CountryUtils {
         }
         return Pair(trimmed, "")
     }
+
+    /**
+     * Checks if country, country code or ISP indicates a Russian DNS server / provider
+     */
+    fun isRussian(countryOrCode: String?, isp: String? = null): Boolean {
+        val code = getCountryCode(countryOrCode)
+        if (code == "RU") return true
+
+        val lowerCountry = (countryOrCode ?: "").lowercase(Locale.ROOT)
+        if (lowerCountry.contains("russia") || lowerCountry.contains("россия") || lowerCountry.contains("russian")) {
+            return true
+        }
+
+        val lowerIsp = (isp ?: "").lowercase(Locale.ROOT)
+        val ruMarkers = listOf(
+            "msk-ix", "internet exchange", "rostelecom", "ростелеком", "rtcomm",
+            "mts", "мтс", "mobile telesystems", "megafon", "мегафон", "netbynet",
+            "net by net", "vimpelcom", "вымпелком", "beeline", "билайн",
+            "er-telecom", "эр-телеком", "dom.ru", "дом.ru", "transtelecom",
+            "транстелеком", "ttk", "ufanet", "уфанет", "akado", "акадо",
+            "comcor", "tattelecom", "таттелеком", "mgts", "мгтс", "yota",
+            "йота", "skartel", "скартел", "tele2", "теле2", "yandex", "яндекс"
+        )
+        return ruMarkers.any { lowerIsp.contains(it) }
+    }
 }
