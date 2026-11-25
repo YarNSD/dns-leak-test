@@ -8,6 +8,7 @@
 
     <!-- Main Content Container with Top Header -->
     <LinearLayout
+        android:id="@+id/mainContentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -174,25 +175,27 @@
 
                                 <ImageView
                                     android:id="@+id/btnCopyDnsReport"
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
                                     android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_tv_focus_icon"
                                     android:clickable="true"
                                     android:contentDescription="Скопировать отчёт"
                                     android:focusable="true"
-                                    android:padding="2dp"
+                                    android:padding="3dp"
                                     android:visibility="gone"
                                     app:srcCompat="@drawable/ic_copy"
                                     app:tint="@color/accent_cyan" />
 
                                 <ImageView
                                     android:id="@+id/btnHelpDnsStatus"
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:background="@drawable/bg_tv_focus_icon"
                                     android:clickable="true"
                                     android:contentDescription="Справка"
                                     android:focusable="true"
-                                    android:padding="2dp"
+                                    android:padding="3dp"
                                     app:srcCompat="@drawable/ic_help_circle"
                                     app:tint="@color/on_surface_variant" />
                             </LinearLayout>
@@ -1036,24 +1039,26 @@
 
                                 <ImageView
                                     android:id="@+id/btnUpdateServicesDb"
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
                                     android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_tv_focus_icon"
                                     android:clickable="true"
                                     android:contentDescription="Обновить базу сервисов с GitHub"
                                     android:focusable="true"
-                                    android:padding="2dp"
+                                    android:padding="3dp"
                                     app:srcCompat="@drawable/ic_refresh"
                                     app:tint="@color/accent_cyan" />
 
                                 <ImageView
                                     android:id="@+id/btnHelpSearch"
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:background="@drawable/bg_tv_focus_icon"
                                     android:clickable="true"
                                     android:contentDescription="Справка"
                                     android:focusable="true"
-                                    android:padding="2dp"
+                                    android:padding="3dp"
                                     app:srcCompat="@drawable/ic_help_circle"
                                     app:tint="@color/on_surface_variant" />
                             </LinearLayout>
@@ -1798,9 +1803,12 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="@drawable/bg_tv_focus_icon"
             android:clickable="true"
             android:contentDescription="Утечка DNS"
-            android:focusable="true">
+            android:focusable="true"
+            android:nextFocusLeft="@+id/navServices"
+            android:nextFocusRight="@+id/navCdn">
 
             <View
                 android:id="@+id/ivNavDnsBg"
@@ -1824,9 +1832,12 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="@drawable/bg_tv_focus_icon"
             android:clickable="true"
             android:contentDescription="Проверка CDN"
-            android:focusable="true">
+            android:focusable="true"
+            android:nextFocusLeft="@+id/navDnsLeak"
+            android:nextFocusRight="@+id/navServices">
 
             <View
                 android:id="@+id/ivNavCdnBg"
@@ -1850,9 +1861,12 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="@drawable/bg_tv_focus_icon"
             android:clickable="true"
             android:contentDescription="Домены сервисов"
-            android:focusable="true">
+            android:focusable="true"
+            android:nextFocusLeft="@+id/navCdn"
+            android:nextFocusRight="@+id/navDnsLeak">
 
             <View
                 android:id="@+id/ivNavServicesBg"

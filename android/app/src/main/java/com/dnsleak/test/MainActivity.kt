@@ -44,6 +44,7 @@ import com.dnsleak.test.ui.ServiceAutoCompleteAdapter
 import com.dnsleak.test.ui.ServiceDomainAdapter
 import com.dnsleak.test.util.CountryUtils
 import com.dnsleak.test.util.DnsEvaluator
+import com.dnsleak.test.util.TvUiUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
@@ -115,6 +116,7 @@ class MainActivity : AppCompatActivity() {
     private fun initApp(savedInstanceState: Bundle?) {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        TvUiUtils.applyTvLayout(this, binding.mainContentContainer)
 
         prefs = getSharedPreferences("dns_leak_prefs", Context.MODE_PRIVATE)
         tester = DnsLeakTester(this)
@@ -131,6 +133,9 @@ class MainActivity : AppCompatActivity() {
         setupServicesListeners()
 
         selectBottomNavTab(0)
+        if (TvUiUtils.isTvMode(this)) {
+            binding.btnCheck.requestFocus()
+        }
 
         val savedJson = savedInstanceState?.getString(KEY_LAST_RESULT_JSON)
         if (!savedJson.isNullOrBlank()) {
@@ -208,6 +213,9 @@ class MainActivity : AppCompatActivity() {
     private fun setupBottomNav() {
         binding.navDnsLeak.setOnClickListener {
             selectBottomNavTab(0)
+        if (TvUiUtils.isTvMode(this)) {
+            binding.btnCheck.requestFocus()
+        }
         }
 
         binding.navCdn.setOnClickListener {

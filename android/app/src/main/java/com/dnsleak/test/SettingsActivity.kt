@@ -13,6 +13,7 @@ import com.dnsleak.test.BuildConfig
 import com.dnsleak.test.databinding.ActivitySettingsBinding
 import com.dnsleak.test.model.DnsProvider
 import com.dnsleak.test.service.AppUpdater
+import com.dnsleak.test.util.TvUiUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 
@@ -46,6 +47,10 @@ class SettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        TvUiUtils.applyTvLayout(this, binding.root)
+        if (TvUiUtils.isTvMode(this)) {
+            binding.cardSelectApi.requestFocus()
+        }
 
         updater = AppUpdater(this)
 

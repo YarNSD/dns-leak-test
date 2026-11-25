@@ -13,6 +13,7 @@ import com.dnsleak.test.model.ApiAvailabilityResult
 import com.dnsleak.test.model.ApiAvailabilityState
 import com.dnsleak.test.model.DnsProvider
 import com.dnsleak.test.ui.ApiCardAdapter
+import com.dnsleak.test.util.TvUiUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -34,6 +35,7 @@ class ApiSelectionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityApiSelectionBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        TvUiUtils.applyTvLayout(this, binding.root)
 
         val prefs = getSharedPreferences("dns_leak_prefs", Context.MODE_PRIVATE)
         val currentId = intent.getStringExtra(EXTRA_SELECTED_ID)
