@@ -1,19 +1,25 @@
 package com.dnsleak.test.service
 
 import android.content.Context
+import com.dnsleak.test.model.DnsHijackStatus
 import com.dnsleak.test.model.DnsLeakResult
 import com.dnsleak.test.model.DnsProvider
 import com.dnsleak.test.model.DnsServerItem
 import com.dnsleak.test.model.LocalDnsInfo
 import com.dnsleak.test.util.CountryUtils
+import com.dnsleak.test.util.DnsEvaluation
+import com.dnsleak.test.util.DnsEvaluator
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
+import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.URL
 import java.util.UUID
@@ -24,48 +30,109 @@ class DnsLeakTester(private val context: Context) {
     private val localInspector = LocalDnsInspector(context)
 
     companion object {
-        private val RU_ISP_KEYWORDS = listOf(
-            "rostelecom", "ростелеком", "rtcomm", "mts", "мтс", "mobile telesystems",
-            "megafon", "мегафон", "netbynet", "net by net", "vimpelcom", "вымпелком", "beeline", "билайн",
-            "er-telecom", "эр-телеком", "dom.ru", "дом.ru", "transtelecom", "транстелеком", "ttk",
-            "ufanet", "уфанет", "akado", "акадо", "comcor", "tattelecom", "таттелеком",
-            "mgts", "мгтс", "yota", "йота", "skartel", "скартел", "tele2", "теле2",
-            "msk-ix", "internet exchange", "yandex", "яндекс"
+        private val FALLBACK_PROVIDER_IDS = listOf(
+            "edns_ip_api",
+            "ipleak_net",
+            "mullvad_net",
+            "adguard_dns"
         )
 
-        private val SECURE_DNS_KEYWORDS = listOf(
-            "cloudflare", "google", "quad9", "adguard", "mullvad", "opendns", "cisco",
-            "nextdns", "control d", "cleanbrowsing", "dns.sb"
+        private val HIJACK_CANARIES = mapOf(
+            "one.one.one.one" to setOf("1.1.1.1", "1.0.0.1"),
+            "dns.google" to setOf("8.8.8.8", "8.8.4.4")
         )
     }
 
     suspend fun runTest(provider: DnsProvider): DnsLeakResult = withContext(Dispatchers.IO) {
-        val startTime = System.currentTimeMillis()
-        val localDns = localInspector.inspect()
+        coroutineScope {
+            val startTime = System.currentTimeMillis()
+            val localDns = localInspector.inspect()
+            val hijackDeferred = async { checkDnsHijacking() }
 
-        return@withContext try {
-            when (provider.id) {
-                                "edns_ip_api" -> testEdnsIpApi(provider, localDns, startTime)
-                "ipleak_net" -> testIpLeakNet(provider, localDns, startTime)
-                "mullvad_net" -> testMullvad(provider, localDns, startTime)
-                "whoer_net" -> testWhoer(provider, localDns, startTime)
-                "adguard_dns" -> testAdguard(provider, localDns, startTime)
-                else -> testGenericFallback(provider, localDns, startTime)
+            var lastError: Exception? = null
+            var result: DnsLeakResult? = try {
+                runSingleProvider(provider, localDns, startTime)
+            } catch (e: Exception) {
+                lastError = e
+                null
             }
-        } catch (e: Exception) {
-            val duration = System.currentTimeMillis() - startTime
-            DnsLeakResult(
+
+            if (result == null || result.servers.isEmpty()) {
+                for (fallbackId in FALLBACK_PROVIDER_IDS) {
+                    if (fallbackId == provider.id) continue
+                    val fallbackProvider = DnsProvider.getById(fallbackId)
+                    try {
+                        val candidate = runSingleProvider(fallbackProvider, localDns, startTime)
+                        if (candidate.servers.isNotEmpty()) {
+                            result = candidate.copy(
+                                providerName = "${fallbackProvider.name} (автозамена)",
+                                usedFallbackFrom = provider.name
+                            )
+                            break
+                        }
+                    } catch (_: Exception) {
+                        // Try next fallback provider
+                    }
+                }
+            }
+
+            val hijackStatus = hijackDeferred.await()
+            val finalResult = result ?: DnsLeakResult(
                 clientIp = "Ошибка подключения",
-                clientIsp = e.localizedMessage ?: "Сетевая ошибка",
+                clientIsp = lastError?.localizedMessage ?: "Все тестовые API недоступны",
                 clientCountry = "Не определено",
                 servers = emptyList(),
                 isOverallLeak = false,
                 providerName = provider.name,
-                testDurationMs = duration,
+                testDurationMs = System.currentTimeMillis() - startTime,
                 localDnsInfo = localDns,
-                rawReport = "Ошибка запроса к ${provider.url}: ${e.message}"
+                rawReport = "Ошибка запроса к ${provider.url}: ${lastError?.message}"
             )
+
+            finalResult.copy(hijackStatus = hijackStatus)
         }
+    }
+
+    private fun runSingleProvider(
+        provider: DnsProvider,
+        localDns: LocalDnsInfo,
+        startTime: Long
+    ): DnsLeakResult {
+        return when (provider.id) {
+            "edns_ip_api" -> testEdnsIpApi(provider, localDns, startTime)
+            "ipleak_net" -> testIpLeakNet(provider, localDns, startTime)
+            "mullvad_net" -> testMullvad(provider, localDns, startTime)
+            "whoer_net" -> testWhoer(provider, localDns, startTime)
+            "adguard_dns" -> testAdguard(provider, localDns, startTime)
+            else -> testGenericFallback(provider, localDns, startTime)
+        }
+    }
+
+    private fun checkDnsHijacking(): DnsHijackStatus {
+        val findings = mutableListOf<String>()
+        var checkedAny = false
+
+        for ((domain, expectedIps) in HIJACK_CANARIES) {
+            try {
+                val resolved = InetAddress.getAllByName(domain)
+                    .filterIsInstance<Inet4Address>()
+                    .mapNotNull { it.hostAddress }
+                if (resolved.isNotEmpty()) {
+                    checkedAny = true
+                    if (DnsEvaluator.isSpoofedIpSet(resolved, expectedIps)) {
+                        findings.add("$domain → ${resolved.joinToString(", ")}")
+                    }
+                }
+            } catch (_: Exception) {
+                // Ignore individual domain resolution failures
+            }
+        }
+
+        return DnsHijackStatus(
+            isChecked = checkedAny,
+            isHijacked = findings.isNotEmpty(),
+            details = findings.joinToString("; ")
+        )
     }
 
     private fun testEdnsIpApi(
@@ -345,80 +412,19 @@ class DnsLeakTester(private val context: Context) {
         return "Источник: Внешний транзитный резолвер"
     }
 
-    private data class DnsEvaluation(
-        val isIspDns: Boolean,
-        val isLeak: Boolean,
-        val isWarning: Boolean,
-        val statusText: String
-    )
-
     private fun evaluateDnsServer(
         dnsIsp: String,
         dnsCountry: String,
         clientIsp: String,
         clientCountry: String,
         localDns: LocalDnsInfo
-    ): DnsEvaluation {
-        val lowerDnsIsp = dnsIsp.lowercase()
-        val lowerClientIsp = clientIsp.lowercase()
-
-        val isSecureDns = SECURE_DNS_KEYWORDS.any { lowerDnsIsp.contains(it) }
-        val isRussian = CountryUtils.isRussian(dnsCountry, dnsIsp)
-        val isKnownRuIsp = RU_ISP_KEYWORDS.any { lowerDnsIsp.contains(it) } || isRussian
-        val matchesClientIsp = lowerClientIsp.isNotEmpty() &&
-                lowerClientIsp != "неизвестно" &&
-                (lowerDnsIsp.contains(lowerClientIsp) || lowerClientIsp.contains(lowerDnsIsp))
-
-        val isIspDns = (isKnownRuIsp || matchesClientIsp) && !isSecureDns
-        val hasPrivateDns = localDns.hasActivePrivateDns() || localDns.privateDnsMode == "opportunistic"
-
-        val isLeak: Boolean
-        val isWarning: Boolean
-
-        when {
-            // Case 1: VPN is active
-            localDns.isVpnActive -> {
-                isLeak = isIspDns || matchesClientIsp || (isRussian && !clientCountry.equals("Russia", ignoreCase = true))
-                isWarning = false
-            }
-            // Case 2: Private DNS is active
-            hasPrivateDns -> {
-                isLeak = isIspDns && !isSecureDns
-                isWarning = false
-            }
-            // Case 3: Wi-Fi network (queries go through router)
-            localDns.isWifi -> {
-                isLeak = false
-                isWarning = isRussian
-            }
-            // Case 4: Mobile network (cellular)
-            localDns.isCellular -> {
-                isLeak = isIspDns || isRussian
-                isWarning = false
-            }
-            // Case 5: Other
-            else -> {
-                isLeak = isIspDns || isRussian
-                isWarning = !isLeak && isRussian
-            }
-        }
-
-        val statusText = when {
-            isLeak && localDns.isVpnActive -> "УТЕЧКА: DNS уходит мимо VPN ($dnsIsp)"
-            isLeak -> "ВНИМАНИЕ: Используется DNS интернет-провайдера ($dnsIsp)"
-            isWarning -> "ПРЕДУПРЕЖДЕНИЕ: Российский DNS на роутере ($dnsIsp)"
-            localDns.isWifi && !isRussian -> "БЕЗОПАСНО: Внешний DNS на роутере ($dnsIsp)"
-            isSecureDns -> "БЕЗОПАСНО: DNS провайдера НЕ используется ($dnsIsp)"
-            else -> "БЕЗОПАСНО: Внешний независимый резолвер ($dnsIsp)"
-        }
-
-        return DnsEvaluation(
-            isIspDns = isIspDns,
-            isLeak = isLeak,
-            isWarning = isWarning,
-            statusText = statusText
-        )
-    }
+    ): DnsEvaluation = DnsEvaluator.evaluateDnsServer(
+        dnsIsp = dnsIsp,
+        dnsCountry = dnsCountry,
+        clientIsp = clientIsp,
+        clientCountry = clientCountry,
+        localDns = localDns
+    )
 
     private fun httpGet(urlStr: String): String {
         val url = URL(urlStr)

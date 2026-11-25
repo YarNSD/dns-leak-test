@@ -43,6 +43,7 @@ import com.dnsleak.test.ui.DnsCardAdapter
 import com.dnsleak.test.ui.ServiceAutoCompleteAdapter
 import com.dnsleak.test.ui.ServiceDomainAdapter
 import com.dnsleak.test.util.CountryUtils
+import com.dnsleak.test.util.DnsEvaluator
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
@@ -424,6 +425,22 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Ссылка на geoip.dat скопирована в буфер", Toast.LENGTH_SHORT).show()
         }
 
+        // Online update of Services DB from GitHub
+        binding.btnUpdateServicesDb.setOnClickListener {
+            binding.btnUpdateServicesDb.isEnabled = false
+            Toast.makeText(this, "Обновление базы доменов с GitHub...", Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch {
+                val res = serviceRepo.updateFromGitHub()
+                binding.btnUpdateServicesDb.isEnabled = true
+                res.onSuccess { count ->
+                    binding.actvServiceSearch.setAdapter(ServiceAutoCompleteAdapter(this@MainActivity, serviceRepo))
+                    Toast.makeText(this@MainActivity, "База обновлена: $count сервисов", Toast.LENGTH_SHORT).show()
+                }.onFailure { err ->
+                    Toast.makeText(this@MainActivity, "Не удалось обновить базу: ${err.localizedMessage}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
         // Help tooltips / Educational dialogs for Service Domains tab
         binding.btnHelpSearch.setOnClickListener {
             showHelpDialog(
@@ -794,6 +811,14 @@ class MainActivity : AppCompatActivity() {
             settingsLauncher.launch(intent)
         }
 
+        binding.btnCopyDnsReport.setOnClickListener {
+            val res = lastResult ?: return@setOnClickListener
+            val report = DnsEvaluator.formatLeakReport(binding.tvVerdict.text.toString(), res)
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+            clipboard?.setPrimaryClip(ClipData.newPlainText("DNS Leak Report", report))
+            Toast.makeText(this, "Отчёт скопирован в буфер обмена", Toast.LENGTH_SHORT).show()
+        }
+
         // Help tooltips / Educational dialogs for DNS Leak tab
         binding.btnHelpDnsStatus.setOnClickListener {
             showHelpDialog(
@@ -1032,6 +1057,28 @@ class MainActivity : AppCompatActivity() {
         }
 
         dnsAdapter.updateData(result.servers)
+        binding.btnCopyDnsReport.visibility = View.VISIBLE
+
+        if (!result.usedFallbackFrom.isNullOrBlank()) {
+            Toast.makeText(
+                this,
+                "${result.usedFallbackFrom} недоступен — выполнен авто-фоллбэк на ${result.providerName}",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        if (result.hijackStatus.isHijacked) {
+            binding.tvVerdict.text = "Обнаружена подмена DNS (Hijacking)"
+            binding.tvVerdict.setTextColor(ContextCompat.getColor(this, R.color.status_leak_text))
+            binding.tvVerdictDescription.text =
+                "Системный DNS возвращает подменённые IP-адреса (${result.hijackStatus.details}). " +
+                    "Трафик DNS перехватывается провайдером или фильтром. Включите Частный DNS (DoT) или VPN."
+            binding.cardStatus.setCardBackgroundColor(ContextCompat.getColor(this, R.color.status_leak_bg))
+            binding.cardStatus.strokeColor = ContextCompat.getColor(this, R.color.status_leak_text)
+        } else if (result.hijackStatus.isChecked) {
+            val currentDesc = binding.tvVerdictDescription.text.toString()
+            binding.tvVerdictDescription.text = "$currentDesc\nПодмена DNS (Hijacking): не обнаружена."
+        }
     }
 
     private fun checkAppUpdatesSilently() {

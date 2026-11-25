@@ -4,6 +4,11 @@ import android.content.Context
 import com.dnsleak.test.model.ServiceDomainItem
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Locale
 
 data class ServiceSuggestion(
@@ -16,20 +21,81 @@ data class ServiceSuggestion(
 
 class ServiceDomainRepository(private val context: Context) {
 
+    companion object {
+        private const val REMOTE_DB_URL =
+            "https://raw.githubusercontent.com/YarNSD/dns-leak-test/main/android/app/src/main/assets/services_db.json"
+        private const val CACHED_FILE_NAME = "services_db_cached.json"
+    }
+
     private val gson = Gson()
     private var cachedServices: List<ServiceDomainItem>? = null
 
     fun getAllServices(): List<ServiceDomainItem> {
         if (cachedServices != null) return cachedServices!!
 
+        val type = object : TypeToken<List<ServiceDomainItem>>() {}.type
+        val localFile = File(context.filesDir, CACHED_FILE_NAME)
+
         cachedServices = try {
-            val jsonString = context.assets.open("services_db.json").bufferedReader().use { it.readText() }
-            val type = object : TypeToken<List<ServiceDomainItem>>() {}.type
-            gson.fromJson<List<ServiceDomainItem>>(jsonString, type) ?: emptyList()
+            val fromCache = if (localFile.exists() && localFile.length() > 100) {
+                gson.fromJson<List<ServiceDomainItem>>(localFile.readText(), type)
+            } else null
+
+            if (!fromCache.isNullOrEmpty()) {
+                fromCache
+            } else {
+                val jsonString = context.assets.open("services_db.json").bufferedReader().use { it.readText() }
+                gson.fromJson<List<ServiceDomainItem>>(jsonString, type) ?: emptyList()
+            }
         } catch (_: Exception) {
-            emptyList()
+            try {
+                val jsonString = context.assets.open("services_db.json").bufferedReader().use { it.readText() }
+                gson.fromJson<List<ServiceDomainItem>>(jsonString, type) ?: emptyList()
+            } catch (_: Exception) {
+                emptyList()
+            }
         }
         return cachedServices!!
+    }
+
+    /**
+     * Downloads the latest services_db.json from GitHub, validates it, and caches locally.
+     */
+    suspend fun updateFromGitHub(): Result<Int> = withContext(Dispatchers.IO) {
+        var conn: HttpURLConnection? = null
+        try {
+            val url = URL(REMOTE_DB_URL)
+            conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "GET"
+            conn.connectTimeout = 8000
+            conn.readTimeout = 10000
+            conn.setRequestProperty("Accept", "application/json")
+
+            val code = conn.responseCode
+            if (code !in 200..299) {
+                return@withContext Result.failure(RuntimeException("HTTP $code"))
+            }
+
+            val jsonText = conn.inputStream.bufferedReader().use { it.readText() }
+            val type = object : TypeToken<List<ServiceDomainItem>>() {}.type
+            val parsed = gson.fromJson<List<ServiceDomainItem>>(jsonText, type)
+
+            if (parsed.isNullOrEmpty()) {
+                return@withContext Result.failure(RuntimeException("Пустая или повреждённая база"))
+            }
+
+            val targetFile = File(context.filesDir, CACHED_FILE_NAME)
+            val tmpFile = File(context.filesDir, "$CACHED_FILE_NAME.tmp")
+            tmpFile.writeText(jsonText)
+            tmpFile.renameTo(targetFile)
+
+            cachedServices = parsed
+            Result.success(parsed.size)
+        } catch (e: Exception) {
+            Result.failure(e)
+        } finally {
+            conn?.disconnect()
+        }
     }
 
     fun getSuggestions(query: String, limit: Int = 15): List<ServiceSuggestion> {

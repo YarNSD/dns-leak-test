@@ -173,6 +173,19 @@
                                     android:textStyle="bold" />
 
                                 <ImageView
+                                    android:id="@+id/btnCopyDnsReport"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:clickable="true"
+                                    android:contentDescription="Скопировать отчёт"
+                                    android:focusable="true"
+                                    android:padding="2dp"
+                                    android:visibility="gone"
+                                    app:srcCompat="@drawable/ic_copy"
+                                    app:tint="@color/accent_cyan" />
+
+                                <ImageView
                                     android:id="@+id/btnHelpDnsStatus"
                                     android:layout_width="22dp"
                                     android:layout_height="22dp"
@@ -1020,6 +1033,18 @@
                                     android:textColor="@color/on_surface_variant"
                                     android:textSize="10sp"
                                     android:textStyle="bold" />
+
+                                <ImageView
+                                    android:id="@+id/btnUpdateServicesDb"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:clickable="true"
+                                    android:contentDescription="Обновить базу сервисов с GitHub"
+                                    android:focusable="true"
+                                    android:padding="2dp"
+                                    app:srcCompat="@drawable/ic_refresh"
+                                    app:tint="@color/accent_cyan" />
 
                                 <ImageView
                                     android:id="@+id/btnHelpSearch"
